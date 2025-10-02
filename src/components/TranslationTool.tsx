@@ -150,7 +150,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
     if (isRecording) {
       stopRecording();
     }
-    // Auto-swap languages when switching between text and image modes
+    // Auto-swap languages when switching between modes
     if (previousMethod === 'text' && method === 'image') {
       // Switching from text to image: swap languages
       const tempLang = sourceLang;
@@ -158,6 +158,16 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       setTargetLang(tempLang);
     } else if (previousMethod === 'image' && method === 'text') {
       // Switching from image to text: swap back
+      const tempLang = sourceLang;
+      setSourceLang(targetLang);
+      setTargetLang(tempLang);
+    } else if (previousMethod === 'image' && method === 'qa') {
+      // Switching from image to q/a: swap languages
+      const tempLang = sourceLang;
+      setSourceLang(targetLang);
+      setTargetLang(tempLang);
+    } else if (previousMethod === 'qa' && method === 'image') {
+      // Switching from q/a to image: swap back
       const tempLang = sourceLang;
       setSourceLang(targetLang);
       setTargetLang(tempLang);
@@ -247,6 +257,16 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       return;
     }
 
+    // Check if source and target languages are the same
+    if (from === to) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Language Selection",
+        description: "Source and target languages cannot be the same. Please select different languages.",
+      });
+      return;
+    }
+
     // Check cache first
     const cachedResult = getCachedTranslation(text, from, to);
     if (cachedResult) {
@@ -274,6 +294,16 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   const handleWordExplanation = async (word: string, wordLang: LanguageCode, explanationLang: LanguageCode) => {
     if (!word.trim()) {
       setTargetText('');
+      return;
+    }
+
+    // Check if source and target languages are the same
+    if (wordLang === explanationLang) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Language Selection",
+        description: "Source and target languages cannot be the same. Please select a different target language.",
+      });
       return;
     }
 
@@ -322,6 +352,16 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   const handleQA = async (question: string, questionLang: LanguageCode, answerLang: LanguageCode) => {
     if (!question.trim()) {
       setTargetText('');
+      return;
+    }
+
+    // Check if source and target languages are the same
+    if (questionLang === answerLang) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Language Selection",
+        description: "Source and target languages cannot be the same. Please select a different target language.",
+      });
       return;
     }
 
@@ -510,6 +550,16 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
 
   // Process image (shared between upload and camera)
   const processImage = async (base64Image: string) => {
+    // Check if source and target languages are the same
+    if (sourceLang === targetLang) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Language Selection",
+        description: "Source and target languages cannot be the same. Please select different languages.",
+      });
+      return;
+    }
+
     try {
       setIsProcessingImage(true);
       setError(null);
