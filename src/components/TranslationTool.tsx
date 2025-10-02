@@ -830,8 +830,8 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       {/* Header */}
       <div className="p-4 bg-indigo-500 text-white flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Languages className="h-5 w-5" />
-          <h1 className="text-lg font-bold">TabiTomo</h1>
+          <img src="/icons/buddy.png" alt="tabitomo" className="h-8 w-8" />
+          <h1 className="text-lg font-bold">tabitomo</h1>
         </div>
         <button
           onClick={onOpenSettings}

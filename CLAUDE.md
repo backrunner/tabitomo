@@ -1,10 +1,10 @@
-# TabiTomo - AI-Powered Translator
+# tabitomo - AI-Powered Translator
 
-**TabiTomo** (旅友 - "Travel Companion") is a modern, cute, and compact AI-powered translation tool designed to help users communicate effortlessly across languages.
+**tabitomo** (旅友 - "Travel Companion") is a modern, cute, and compact AI-powered translation tool designed to help users communicate effortlessly across languages.
 
 ## 🌟 Product Overview
 
-**Product Name:** TabiTomo
+**Product Name:** tabitomo
 **Purpose:** AI-powered multilingual translator with text, audio, and image input support
 **Target Users:** Travelers, language learners, and anyone needing quick translations
 

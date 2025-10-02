@@ -56,7 +56,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                {isInitialSetup ? 'Welcome to TabiTomo!' : 'Settings'}
+                {isInitialSetup ? 'Welcome to tabitomo!' : 'Settings'}
               </h2>
               {isInitialSetup && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
