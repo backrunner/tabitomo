@@ -23,6 +23,7 @@ export interface VLMSettings {
   apiKey?: string;
   endpoint?: string;
   modelName?: string;
+  enableThinking: boolean; // Enable thinking mode (show model's reasoning process)
 }
 
 export interface AISettings {
@@ -67,6 +68,7 @@ export const DEFAULT_SETTINGS: AISettings = {
   vlm: {
     useGeneralAI: true, // Default to using general AI
     useCustom: false,
+    enableThinking: false, // Disable thinking mode by default
   },
 };
 

@@ -1,8 +1,8 @@
 import OpenAI from 'openai';
-import { generateObject } from 'ai';
+import { generateObject, streamText } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { z } from 'zod';
-import { ImageOCRSettings, VLMSettings, AISettings } from './settings';
+import { ImageOCRSettings, AISettings } from './settings';
 import { SUPPORTED_LANGUAGES, type LanguageCode } from './translation';
 
 export interface OCRTextLocation {
@@ -250,11 +250,204 @@ export async function translateImageWithVLM(
     });
 
     console.log('[VLM Translation] Translation completed');
-    console.log('[VLM Translation] Result:', result.object.translated_text);
+    console.log('[VLM Translation] Raw result:', result.object.translated_text);
 
-    return result.object.translated_text;
+    // Clean up thinking output if present
+    let cleanedText = result.object.translated_text;
+
+    // Remove <think> or <thinking> tags if present
+    cleanedText = cleanedText.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    cleanedText = cleanedText.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+
+    // Remove markdown thinking sections (e.g., **Thinking:** or ## Thinking)
+    cleanedText = cleanedText.replace(/^#+\s*thinking[\s\S]*?(?=^#+|$)/gmi, '');
+    cleanedText = cleanedText.replace(/^\*\*thinking:?\*\*[\s\S]*?(?=^[^\s]|$)/gmi, '');
+
+    // Trim extra whitespace
+    cleanedText = cleanedText.trim();
+
+    console.log('[VLM Translation] Cleaned result:', cleanedText);
+
+    return cleanedText;
   } catch (error) {
     console.error('[VLM Translation] Error:', error);
     throw new Error(`VLM translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
+
+/**
+ * Translate image content directly using VLM with streaming support
+ */
+export async function* streamTranslateImageWithVLM(
+  imageBase64: string,
+  sourceLang: LanguageCode,
+  targetLang: LanguageCode,
+  settings: AISettings
+): AsyncGenerator<string, void, unknown> {
+  console.log('[VLM Streaming] Starting VLM streaming translation');
+  console.log('[VLM Streaming] Source language:', sourceLang);
+  console.log('[VLM Streaming] Target language:', targetLang);
+  console.log('[VLM Streaming] Thinking mode:', settings.vlm.enableThinking);
+
+  // Determine which settings to use
+  const vlmConfig = settings.vlm;
+  let apiKey: string;
+  let endpoint: string;
+  let modelName: string;
+
+  if (vlmConfig.useGeneralAI) {
+    // Use general AI settings
+    apiKey = settings.generalAI.apiKey;
+    endpoint = settings.generalAI.endpoint;
+    modelName = settings.generalAI.modelName;
+    console.log('[VLM Streaming] Using General AI settings');
+  } else if (vlmConfig.useCustom && vlmConfig.apiKey && vlmConfig.endpoint && vlmConfig.modelName) {
+    // Use custom VLM settings
+    apiKey = vlmConfig.apiKey;
+    endpoint = vlmConfig.endpoint;
+    modelName = vlmConfig.modelName;
+    console.log('[VLM Streaming] Using custom VLM settings');
+  } else {
+    // Use OCR settings
+    apiKey = settings.imageOCR.apiKey;
+    endpoint = settings.imageOCR.endpoint;
+    modelName = settings.imageOCR.provider === 'qwen'
+      ? 'qwen-vl-max-latest'
+      : (settings.imageOCR.modelName || 'gpt-4o');
+    console.log('[VLM Streaming] Using OCR settings');
+  }
+
+  console.log('[VLM Streaming] Endpoint:', endpoint);
+  console.log('[VLM Streaming] Model:', modelName);
+
+  const sourceLanguageName = SUPPORTED_LANGUAGES[sourceLang];
+  const targetLanguageName = SUPPORTED_LANGUAGES[targetLang];
+
+  // Create AI SDK client
+  const client = createOpenAICompatible({
+    name: 'vlm-provider',
+    apiKey,
+    baseURL: endpoint,
+  });
+
+  console.log('[VLM Streaming] Sending request');
+
+  try {
+    const result = await streamText({
+      model: client(modelName),
+      messages: [
+        {
+          role: 'system',
+          content: `You are a professional translator specializing in image content translation. Your task is to:
+1. Identify and extract all text content from the provided image
+2. Translate the text from ${sourceLanguageName} to ${targetLanguageName}
+3. Preserve the original formatting, line breaks, and structure
+4. Maintain the tone and style of the original text
+5. For any cultural references or idioms, provide natural equivalent expressions in the target language
+${settings.vlm.enableThinking ? '\n6. You may include your thinking process using <think></think> tags, which will be displayed to the user.' : '\n6. Do NOT include thinking process or reasoning. Provide only the final translation.'}`,
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              image: imageBase64,
+            },
+            {
+              type: 'text',
+              text: `Please translate all text content in this image from ${sourceLanguageName} to ${targetLanguageName}. Preserve the formatting and line breaks.`,
+            },
+          ],
+        },
+      ],
+    });
+
+    let inThinkTag = false;
+    let buffer = '';
+
+    for await (const chunk of result.textStream) {
+      // Filter out GLM box tokens
+      const filteredChunk = chunk
+        .replace(/<\|begin_of_box\|>/g, '')
+        .replace(/<\|end_of_box\|>/g, '');
+
+      buffer += filteredChunk;
+
+      // Process buffer to handle think tags
+      while (true) {
+        if (!inThinkTag) {
+          const thinkStartIndex = buffer.indexOf('<think>');
+          if (thinkStartIndex === -1) {
+            // No think tag found, yield everything except potential incomplete tag at the end
+            const lastTagStart = buffer.lastIndexOf('<');
+            if (lastTagStart === -1 || lastTagStart === 0) {
+              // No potential tag start, yield everything
+              if (buffer.length > 0) {
+                yield buffer;
+                buffer = '';
+              }
+              break;
+            } else {
+              // Might be a partial tag, yield everything before it
+              const toYield = buffer.substring(0, lastTagStart);
+              if (toYield.length > 0) {
+                yield toYield;
+              }
+              buffer = buffer.substring(lastTagStart);
+              break;
+            }
+          } else {
+            // Found think tag start
+            if (thinkStartIndex > 0) {
+              // Yield content before think tag
+              yield buffer.substring(0, thinkStartIndex);
+            }
+            buffer = buffer.substring(thinkStartIndex);
+            inThinkTag = true;
+
+            if (!settings.vlm.enableThinking) {
+              // Remove the <think> tag
+              buffer = buffer.substring(7); // Remove '<think>'
+            } else {
+              // Keep the tag and yield it
+              yield '<think>';
+              buffer = buffer.substring(7);
+            }
+          }
+        } else {
+          const thinkEndIndex = buffer.indexOf('</think>');
+          if (thinkEndIndex === -1) {
+            // No end tag yet
+            if (settings.vlm.enableThinking) {
+              // Yield the content inside think tags
+              yield buffer;
+            }
+            // Otherwise, skip it (don't yield)
+            buffer = '';
+            break;
+          } else {
+            // Found end tag
+            if (settings.vlm.enableThinking) {
+              // Yield content and end tag
+              yield buffer.substring(0, thinkEndIndex + 8); // Include '</think>'
+            }
+            // Skip the content inside think tags
+            buffer = buffer.substring(thinkEndIndex + 8);
+            inThinkTag = false;
+          }
+        }
+      }
+    }
+
+    // Handle any remaining buffer
+    if (buffer.length > 0 && (!inThinkTag || settings.vlm.enableThinking)) {
+      yield buffer;
+    }
+
+    console.log('[VLM Streaming] Translation completed');
+  } catch (error) {
+    console.error('[VLM Streaming] Error:', error);
+    throw new Error(`VLM streaming translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+

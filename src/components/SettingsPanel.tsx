@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, Save, Settings as SettingsIcon, Sparkles, MessageSquare, Mic, Image as ImageIcon, ArrowLeftRight } from 'lucide-react';
+import { X, Save, Settings as SettingsIcon, Sparkles, Mic, Image as ImageIcon, ArrowLeftRight } from 'lucide-react';
 import { AISettings, saveSettings, loadSettings, DEFAULT_SETTINGS, OPENAI_ENDPOINT, DASHSCOPE_ENDPOINT } from '../utils/settings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
 import { ImportExportDialog } from './ImportExportDialog';
+import { Switch } from './ui/switch';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -521,6 +522,25 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                       </div>
                     </>
                   )}
+
+                  {/* Thinking Mode Toggle */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <label htmlFor="thinkingMode" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Enable Thinking Mode
+                        </label>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          Show model's reasoning process in VLM translations
+                        </p>
+                      </div>
+                      <Switch
+                        id="thinkingMode"
+                        checked={settings.vlm.enableThinking}
+                        onCheckedChange={(checked: boolean) => setSettings({ ...settings, vlm: { ...settings.vlm, enableThinking: checked } })}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Info Box */}
@@ -543,7 +563,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
           {!isInitialSetup ? (
             <button
               onClick={handleSave}
-              disabled={!settings.generalAI.apiKey || !settings.generalAI.modelName || !settings.generalAI.endpoint}
+              disabled={isSaving}
               className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
             >
               <Save className="w-4 h-4" />
@@ -552,7 +572,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
           ) : (
             <button
               onClick={handleSave}
-              disabled={!settings.generalAI.apiKey || !settings.generalAI.modelName || !settings.generalAI.endpoint}
+              disabled={isSaving}
               className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-base font-bold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
             >
               {isSaving ? 'Starting...' : 'Start Translating'}

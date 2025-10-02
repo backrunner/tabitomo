@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { TranslationTool } from './components/TranslationTool';
 import { SettingsPanel } from './components/SettingsPanel';
-import { hasSettings, loadSettings, AISettings, DEFAULT_SETTINGS } from './utils/settings';
+import { Toaster } from './components/ui/toaster';
+import { loadSettings, saveSettings, AISettings, DEFAULT_SETTINGS } from './utils/settings';
 
 export function App() {
   const [showSettings, setShowSettings] = useState(false);
@@ -10,21 +11,22 @@ export function App() {
   const [isInitialSetup, setIsInitialSetup] = useState(false);
 
   useEffect(() => {
-    // Check if user has completed setup
-    const hasCompletedSetup = hasSettings();
-    if (!hasCompletedSetup) {
-      setShowSettings(true);
-      setIsInitialSetup(true);
-    } else {
-      const loaded = loadSettings();
+    // Load settings or use defaults
+    const loaded = loadSettings();
+    if (loaded) {
       // Ensure generalAI and vlm exist for backward compatibility
-      if (loaded && !loaded.generalAI) {
+      if (!loaded.generalAI) {
         loaded.generalAI = DEFAULT_SETTINGS.generalAI;
       }
-      if (loaded && !loaded.vlm) {
+      if (!loaded.vlm) {
         loaded.vlm = DEFAULT_SETTINGS.vlm;
       }
       setCurrentSettings(loaded);
+    } else {
+      // First launch: use default settings (no forced setup)
+      setCurrentSettings(DEFAULT_SETTINGS);
+      // Save defaults to localStorage
+      saveSettings(DEFAULT_SETTINGS);
     }
     setIsLoading(false);
   }, []);
@@ -71,6 +73,9 @@ export function App() {
         onSave={handleSettingsSave}
         isInitialSetup={isInitialSetup}
       />
+
+      {/* Toast Notifications */}
+      <Toaster />
     </div>
   );
 }

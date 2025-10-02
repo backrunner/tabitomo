@@ -3,12 +3,15 @@ import { translateText, SUPPORTED_LANGUAGES, type LanguageCode } from '../utils/
 import { addFuriganaAnnotations } from '../utils/japanese';
 import { speakText, getSpeechLocale } from '../utils/speech';
 import { useSiliconFlowSpeech, transcribeAudioSiliconFlow } from '../utils/audioTranscription';
-import { performOCR, imageToBase64, translateImageWithVLM } from '../utils/imageOcr';
-import { Languages, Mic, Image as ImageIcon, ArrowUpDown, X, Copy, Check, Volume2, Camera, Keyboard, Settings } from 'lucide-react';
+import { performOCR, imageToBase64, streamTranslateImageWithVLM } from '../utils/imageOcr';
+import { explainWord, quickQA } from '../utils/explanation';
+import { Mic, Image as ImageIcon, ArrowUpDown, X, Copy, Check, Volume2, Camera, Keyboard, Settings, MessageCircle, BookOpen } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { AISettings } from '../utils/settings';
 import { CameraPanel } from './CameraPanel';
 import { ImageLightbox } from './ImageLightbox';
+import { marked } from 'marked';
+import { useToast } from './ui/use-toast';
 import {
   Select,
   SelectContent,
@@ -51,7 +54,8 @@ const languageOptions = Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) =
   label: name
 }));
 
-type InputMethod = 'text' | 'image';
+type InputMethod = 'text' | 'image' | 'qa';
+type TextMode = 'translation' | 'explanation';
 
 interface TranslationToolProps {
   settings: AISettings;
@@ -76,7 +80,9 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   const [furiganaHtml, setFuriganaHtml] = useState<string | null>(null);
   // UI state
   const [inputMethod, setInputMethod] = useState<InputMethod>('text');
+  const [textMode, setTextMode] = useState<TextMode>('translation');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Recording state
@@ -100,11 +106,40 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   const translationCacheRef = useRef<Map<string, CachedTranslation>>(new Map());
   // Check if using SiliconFlow speech recognition
   const useSiliconFlowForSpeech = useSiliconFlowSpeech(settings);
+  // Toast hook
+  const { toast } = useToast();
+
+  // Check if general AI service is configured
+  const isGeneralAIConfigured = () => {
+    return !!(settings.generalAI.apiKey && settings.generalAI.endpoint && settings.generalAI.modelName);
+  };
+
+  // Check if VLM is configured
+  const isVLMConfigured = () => {
+    const vlmConfig = settings.vlm;
+
+    if (vlmConfig.useGeneralAI) {
+      // Using general AI settings
+      return isGeneralAIConfigured();
+    } else if (vlmConfig.useCustom) {
+      // Using custom VLM settings
+      return !!(vlmConfig.apiKey && vlmConfig.endpoint && vlmConfig.modelName);
+    } else {
+      // Using OCR settings - check if OCR is using General AI or its own settings
+      if (settings.imageOCR.useGeneralAI) {
+        return isGeneralAIConfigured();
+      } else {
+        return !!(settings.imageOCR.apiKey && settings.imageOCR.endpoint);
+      }
+    }
+  };
 
   // Handle input method change and clear inputs
   const handleInputMethodChange = (method: InputMethod) => {
     const previousMethod = inputMethod;
     setInputMethod(method);
+    // Reset text mode when changing input method
+    setTextMode('translation');
     // Clear all inputs and outputs
     setSourceText('');
     setTargetText('');
@@ -235,6 +270,102 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       setIsTranslating(false);
     }
   };
+  // Handle explanation (word/sentence/grammar)
+  const handleWordExplanation = async (word: string, wordLang: LanguageCode, explanationLang: LanguageCode) => {
+    if (!word.trim()) {
+      setTargetText('');
+      return;
+    }
+
+    // Check if general AI is configured
+    if (!isGeneralAIConfigured()) {
+      toast({
+        variant: "destructive",
+        title: "General AI Service Required",
+        description: "Please configure the General AI service in Settings to use the Explanation feature.",
+      });
+      return;
+    }
+
+    setIsTranslating(true);
+    setError(null);
+    setTargetText('');
+    setIsThinking(false);
+
+    try {
+      let streamedText = '';
+      for await (const chunk of explainWord(word, wordLang, explanationLang, settings)) {
+        // Handle thinking markers
+        if (chunk === '___THINKING_START___') {
+          setIsThinking(true);
+          continue;
+        }
+        if (chunk === '___THINKING_END___') {
+          setIsThinking(false);
+          continue;
+        }
+
+        streamedText += chunk;
+        setTargetText(streamedText);
+      }
+    } catch (error) {
+      console.error('Explanation error:', error);
+      setError(error instanceof Error ? error.message : 'Explanation failed');
+      setTargetText('');
+    } finally {
+      setIsTranslating(false);
+      setIsThinking(false);
+    }
+  };
+
+  // Handle Q/A
+  const handleQA = async (question: string, questionLang: LanguageCode, answerLang: LanguageCode) => {
+    if (!question.trim()) {
+      setTargetText('');
+      return;
+    }
+
+    // Check if general AI is configured
+    if (!isGeneralAIConfigured()) {
+      toast({
+        variant: "destructive",
+        title: "General AI Service Required",
+        description: "Please configure the General AI service in Settings to use the Q&A feature.",
+      });
+      return;
+    }
+
+    setIsTranslating(true);
+    setError(null);
+    setTargetText('');
+    setIsThinking(false);
+
+    try {
+      let streamedText = '';
+      for await (const chunk of quickQA(question, questionLang, answerLang, settings)) {
+        // Handle thinking markers
+        if (chunk === '___THINKING_START___') {
+          setIsThinking(true);
+          continue;
+        }
+        if (chunk === '___THINKING_END___') {
+          setIsThinking(false);
+          continue;
+        }
+
+        streamedText += chunk;
+        setTargetText(streamedText);
+      }
+    } catch (error) {
+      console.error('Q/A error:', error);
+      setError(error instanceof Error ? error.message : 'Q/A failed');
+      setTargetText('');
+    } finally {
+      setIsTranslating(false);
+      setIsThinking(false);
+    }
+  };
+
   // Handle text input
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
@@ -245,10 +376,16 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Auto translate after a short delay
+    // Auto translate/explain/answer after a short delay
     if (newText.trim()) {
       debounceTimerRef.current = setTimeout(() => {
-        handleTranslate(newText, sourceLang, targetLang);
+        if (inputMethod === 'text' && textMode === 'explanation') {
+          handleWordExplanation(newText, sourceLang, targetLang);
+        } else if (inputMethod === 'qa') {
+          handleQA(newText, sourceLang, targetLang);
+        } else {
+          handleTranslate(newText, sourceLang, targetLang);
+        }
       }, 600);
     } else {
       setTargetText('');
@@ -378,16 +515,41 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       setError(null);
       setImage(base64Image);
 
-      // VLM Mode: Direct translation without OCR
+      // VLM Mode: Direct translation without OCR (with streaming)
       if (useVLMMode) {
-        console.log('[Image VLM] Starting VLM translation...');
-        const translatedText = await translateImageWithVLM(base64Image, sourceLang, targetLang, settings);
-        console.log('[Image VLM] VLM translation completed:', translatedText);
+        console.log('[Image VLM] Starting VLM streaming translation...');
+
+        // Check if VLM is configured
+        if (!isVLMConfigured()) {
+          setIsProcessingImage(false);
+          setImage(null);
+          toast({
+            variant: "destructive",
+            title: "VLM Service Required",
+            description: "Please configure VLM service in Settings (General AI, OCR, or Custom VLM) to use text-only translation mode.",
+          });
+          return;
+        }
 
         setSourceText(''); // No source text in VLM mode
-        setTargetText(translatedText);
+        setTargetText(''); // Clear target text before streaming
         setTranslatedImage(null); // No translated image in VLM mode
-        setIsProcessingImage(false);
+
+        let streamedText = '';
+
+        try {
+          for await (const chunk of streamTranslateImageWithVLM(base64Image, sourceLang, targetLang, settings)) {
+            streamedText += chunk;
+            setTargetText(streamedText);
+          }
+          console.log('[Image VLM] VLM translation completed');
+        } catch (err) {
+          console.error('[Image VLM] Streaming error:', err);
+          setError(err instanceof Error ? err.message : 'VLM translation failed');
+        } finally {
+          setIsProcessingImage(false);
+        }
+
         console.log('[Image VLM] Complete!');
         return;
       }
@@ -843,37 +1005,59 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       </div>
       {/* Language Selection */}
       <div className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-gray-700">
-        <div className="flex-1">
-          <Select value={sourceLang} onValueChange={(value) => setSourceLang(value as LanguageCode)}>
-            <SelectTrigger className="w-full text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {languageOptions.map(lang => (
-                <SelectItem key={`source-${lang.value}`} value={lang.value}>
-                  {lang.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <button id="swap-button" onClick={handleSwapLanguages} className="mx-2 p-2 bg-white dark:bg-gray-600 rounded-full shadow-md btn-pop">
-          <ArrowUpDown className="h-4 w-4 text-indigo-500 dark:text-white" />
-        </button>
-        <div className="flex-1">
-          <Select value={targetLang} onValueChange={(value) => setTargetLang(value as LanguageCode)}>
-            <SelectTrigger className="w-full text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {languageOptions.map(lang => (
-                <SelectItem key={`target-${lang.value}`} value={lang.value}>
-                  {lang.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {(inputMethod === 'text' && textMode === 'explanation') || inputMethod === 'qa' ? (
+          // For explanation and Q/A: Only show target language
+          <div className="w-full flex items-center justify-center space-x-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Target Language:</span>
+            <Select value={targetLang} onValueChange={(value) => setTargetLang(value as LanguageCode)}>
+              <SelectTrigger className="w-48 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {languageOptions.map(lang => (
+                  <SelectItem key={`target-${lang.value}`} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          // For translation and image: Show source and target
+          <>
+            <div className="flex-1">
+              <Select value={sourceLang} onValueChange={(value) => setSourceLang(value as LanguageCode)}>
+                <SelectTrigger className="w-full text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {languageOptions.map(lang => (
+                    <SelectItem key={`source-${lang.value}`} value={lang.value}>
+                      {lang.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <button id="swap-button" onClick={handleSwapLanguages} className="mx-2 p-2 bg-white dark:bg-gray-600 rounded-full shadow-md btn-pop">
+              <ArrowUpDown className="h-4 w-4 text-indigo-500 dark:text-white" />
+            </button>
+            <div className="flex-1">
+              <Select value={targetLang} onValueChange={(value) => setTargetLang(value as LanguageCode)}>
+                <SelectTrigger className="w-full text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {languageOptions.map(lang => (
+                    <SelectItem key={`target-${lang.value}`} value={lang.value}>
+                      {lang.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
       </div>
       {/* Main Content Area */}
       <div className="p-4">
@@ -934,49 +1118,79 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                   onChange={handleTextChange}
                   placeholder={isRecording
                     ? 'Listening...'
+                    : inputMethod === 'qa'
+                    ? 'Ask a question (e.g., "How to ask for the check?")'
+                    : textMode === 'explanation'
+                    ? 'Enter text to explain (word/sentence/grammar)...'
                     : `Type in ${languageOptions.find(l => l.value === sourceLang)?.label}...`
                   }
                   className="w-full min-h-[8rem] max-h-[12.5rem] p-3 pr-12 rounded-2xl border-2 border-indigo-100 dark:border-gray-600 focus:ring-2 focus:ring-indigo-300 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 resize-none cute-shadow overflow-y-auto"
                   style={{ height: 'auto' }}
                 />
-                {/* Audio recording button (always visible in text mode) */}
-                <div className="absolute right-3 bottom-3">
-                  {isRecording ? (
-                    <button
-                      onClick={stopRecording}
-                      className="p-2 bg-red-500 text-white rounded-full shadow-md btn-pop flex items-center justify-center"
-                      title="Stop recording"
-                    >
-                      <div className="w-3 h-3 bg-white rounded-sm"></div>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={startRecording}
-                      className="p-2 bg-indigo-500 text-white rounded-full shadow-md btn-pop"
-                      title="Start recording"
-                    >
-                      <Mic className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
+                {/* Audio recording button (visible in text mode, hidden in Q/A) */}
+                {inputMethod !== 'qa' && (
+                  <div className="absolute right-3 bottom-3">
+                    {isRecording ? (
+                      <button
+                        onClick={stopRecording}
+                        className="p-2 bg-red-500 text-white rounded-full shadow-md btn-pop flex items-center justify-center"
+                        title="Stop recording"
+                      >
+                        <div className="w-3 h-3 bg-white rounded-sm"></div>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={startRecording}
+                        className="p-2 bg-indigo-500 text-white rounded-full shadow-md btn-pop"
+                        title="Start recording"
+                      >
+                        <Mic className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>}
             {/* Input Method Controls */}
             <div className="flex items-center justify-center mt-3 space-x-2">
-              <button onClick={() => handleInputMethodChange('text')} className={`p-2 rounded-xl ${inputMethod === 'text' ? 'bg-indigo-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'} btn-pop`}>
+              <button onClick={() => handleInputMethodChange('text')} className={`p-2 rounded-xl ${inputMethod === 'text' ? 'bg-indigo-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'} btn-pop`} title="Text/Audio input">
                 <Keyboard className="h-4 w-4" />
               </button>
-              <button onClick={() => handleInputMethodChange('image')} className={`p-2 rounded-xl ${inputMethod === 'image' ? 'bg-indigo-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'} btn-pop`}>
+              <button onClick={() => handleInputMethodChange('image')} className={`p-2 rounded-xl ${inputMethod === 'image' ? 'bg-indigo-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'} btn-pop`} title="Image input">
                 <Camera className="h-4 w-4" />
+              </button>
+              <button onClick={() => handleInputMethodChange('qa')} className={`p-2 rounded-xl ${inputMethod === 'qa' ? 'bg-indigo-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'} btn-pop`} title="Quick Q&A">
+                <MessageCircle className="h-4 w-4" />
               </button>
             </div>
             {/* Translation Result */}
             <div className="mt-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  {languageOptions.find(l => l.value === targetLang)?.label}{' '}
-                  Translation
+                  {inputMethod === 'qa'
+                    ? 'Answer'
+                    : textMode === 'explanation'
+                    ? 'Explanation'
+                    : `${languageOptions.find(l => l.value === targetLang)?.label} Translation`}
                 </h3>
                 <div className="flex items-center space-x-2">
+                  {inputMethod === 'text' && (
+                    <button
+                      onClick={() => {
+                        const newMode = textMode === 'translation' ? 'explanation' : 'translation';
+                        setTextMode(newMode);
+                        setSourceText('');
+                        setTargetText('');
+                      }}
+                      className={`px-2 py-1 text-xs rounded-lg transition-all duration-200 ${
+                        textMode === 'explanation'
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                      }`}
+                      title={textMode === 'explanation' ? 'Switch to Translation' : 'Switch to Explanation'}
+                    >
+                      {textMode === 'explanation' ? 'Explanation' : 'Translation'}
+                    </button>
+                  )}
                   {inputMethod === 'image' && (
                     <button
                       onClick={() => setUseVLMMode(!useVLMMode)}
@@ -1011,7 +1225,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                 </div>
               </div>
               <div className="mt-2 p-3 min-h-[80px] bg-indigo-50 dark:bg-gray-700 rounded-2xl cute-shadow flex items-center justify-center" ref={targetInputRef}>
-                {isTranslating ? <div className="flex items-center justify-center py-4">
+                {isTranslating && !targetText ? <div className="flex items-center justify-center py-4">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-indigo-500 dark:bg-indigo-400 rounded-full animate-bounce" style={{
                   animationDelay: '0ms'
@@ -1035,18 +1249,41 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                       />
                     </div>
                   ) : targetText ? (
-                    furiganaHtml ? (
+                    <div className="w-full">
+                      {/* Thinking indicator */}
+                      {isThinking && (
+                        <div className="mb-2 flex items-center space-x-2 text-xs text-amber-600 dark:text-amber-400">
+                          <div className="flex space-x-1">
+                            <div className="w-1.5 h-1.5 bg-amber-500 dark:bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-1.5 h-1.5 bg-amber-500 dark:bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-1.5 h-1.5 bg-amber-500 dark:bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                          </div>
+                          <span className="font-medium">Thinking...</span>
+                        </div>
+                      )}
+                      {useVLMMode || inputMethod === 'qa' || textMode === 'explanation' ? (
+                        // VLM mode / Q&A / Explanation: Render as markdown using marked
+                        <div
+                          className="text-gray-800 dark:text-gray-200 w-full leading-relaxed prose dark:prose-invert prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: marked.parse(targetText) as string }}
+                        />
+                      ) : furiganaHtml ? (
                       <div
                         className="text-gray-800 dark:text-gray-200 w-full leading-relaxed whitespace-pre-wrap"
                         dangerouslySetInnerHTML={{ __html: furiganaHtml }}
                       />
-                    ) : (
-                      <p className="text-gray-800 dark:text-gray-200 w-full whitespace-pre-wrap">
-                        {targetText}
-                      </p>
-                    )
+                      ) : (
+                        <p className="text-gray-800 dark:text-gray-200 w-full whitespace-pre-wrap">
+                          {targetText}
+                        </p>
+                      )}
+                    </div>
                   ) : <p className="text-gray-400 dark:text-gray-500 text-center py-6">
-                    Translation will appear here
+                    {inputMethod === 'qa'
+                      ? 'Ask a question and get a quick answer'
+                      : textMode === 'explanation'
+                      ? 'Enter text to see its explanation'
+                      : 'Translation will appear here'}
                   </p>}
               </div>
             </div>
