@@ -1,11 +1,18 @@
 import { AISettings } from './settings';
 
 /**
- * Check if the provider is SiliconFlow based on endpoint URL
+ * Check if the provider is SiliconFlow for speech recognition
  */
-export function isSiliconFlowProvider(settings: AISettings): boolean {
-  return settings.provider === 'custom' &&
-         settings.endpoint.toLowerCase().includes('siliconflow');
+export function useSiliconFlowSpeech(settings: AISettings): boolean {
+  return settings.speechRecognition.provider === 'siliconflow';
+}
+
+/**
+ * Get the API key for SiliconFlow speech recognition
+ */
+function getSiliconFlowApiKey(settings: AISettings): string {
+  // Use speech-specific API key if set, otherwise use translation API key
+  return settings.speechRecognition.apiKey || settings.apiKey;
 }
 
 /**
@@ -26,7 +33,7 @@ export async function transcribeAudioSiliconFlow(
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${settings.apiKey}`,
+      'Authorization': `Bearer ${getSiliconFlowApiKey(settings)}`,
     },
     body: formData,
   });

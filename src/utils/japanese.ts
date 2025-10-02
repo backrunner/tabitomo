@@ -20,7 +20,9 @@ async function initKuroshiro(): Promise<void> {
 
   initPromise = (async () => {
     kuroshiroInstance = new Kuroshiro();
-    await kuroshiroInstance.init(new KuromojiAnalyzer());
+    await kuroshiroInstance.init(new KuromojiAnalyzer({
+      dictPath: '/kuromoji/dict/'
+    }));
   })();
 
   return initPromise;

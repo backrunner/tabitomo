@@ -57,23 +57,19 @@ const translationSchema = z.object({
 
 // Initialize AI client based on provider
 const getAIClient = (settings: AISettings) => {
-  if (!settings.apiKey) {
+  // Use general AI service if configured
+  const apiKey = settings.generalAI.apiKey || settings.apiKey;
+  const endpoint = settings.generalAI.endpoint || settings.endpoint;
+
+  if (!apiKey) {
     throw new Error('API key is not configured');
   }
 
-  // Use OpenAI SDK for official OpenAI API
-  if (settings.provider === 'openai') {
-    return createOpenAI({
-      apiKey: settings.apiKey,
-      baseURL: settings.endpoint,
-    });
-  }
-
-  // Use OpenAI-compatible SDK for custom providers
+  // Always use OpenAI-compatible SDK
   return createOpenAICompatible({
-    name: 'custom',
-    apiKey: settings.apiKey,
-    baseURL: settings.endpoint,
+    name: 'ai-provider',
+    apiKey,
+    baseURL: endpoint,
   });
 };
 
@@ -111,11 +107,12 @@ export async function translateText(
 
   try {
     const client = getAIClient(settings);
+    const modelName = settings.generalAI.modelName || settings.modelName;
     const sourceLangName = SUPPORTED_LANGUAGES[sourceLang];
     const targetLangName = SUPPORTED_LANGUAGES[targetLang];
 
     // Use chat completion for Hunyuan-MT model
-    if (isHunyuanMT(settings.modelName)) {
+    if (isHunyuanMT(modelName)) {
       // Determine if either source or target is Chinese
       const isChineseInvolved = sourceLang === 'zh' || sourceLang === 'zh-Hant' ||
                                 targetLang === 'zh' || targetLang === 'zh-Hant';
@@ -123,14 +120,14 @@ export async function translateText(
       let prompt: string;
       if (isChineseInvolved) {
         // Chinese prompt for ZH<=>XX translation
-        prompt = `把下面的文本翻译成${targetLangName}，不要额外解释。\n\n${text}`;
+        prompt = `把下面的文本翻译成${targetLangName}，不要输出任何的额外解释。\n\n${text}`;
       } else {
         // English prompt for XX<=>XX translation
         prompt = `Translate the following segment into ${targetLangName}, without additional explanation.\n\n${text}`;
       }
 
       const result = await generateText({
-        model: client(settings.modelName),
+        model: client(modelName),
         prompt: prompt,
       });
 
@@ -139,7 +136,7 @@ export async function translateText(
 
     // Use structured output for other models
     const result = await generateObject({
-      model: client(settings.modelName),
+      model: client(modelName),
       schema: translationSchema,
       prompt: `You are a professional translator. Translate the following text from ${sourceLangName} (${sourceLang}) to ${targetLangName} (${targetLang}).
 
@@ -175,6 +172,7 @@ export async function detectLanguage(text: string, settings: AISettings): Promis
 
   try {
     const client = getAIClient(settings);
+    const modelName = settings.generalAI.modelName || settings.modelName;
 
     const languageDetectionSchema = z.object({
       languageCode: z.string().describe('The detected language code'),
@@ -184,7 +182,7 @@ export async function detectLanguage(text: string, settings: AISettings): Promis
     const supportedCodes = Object.keys(SUPPORTED_LANGUAGES).join(', ');
 
     const result = await generateObject({
-      model: client(settings.modelName),
+      model: client(modelName),
       schema: languageDetectionSchema,
       prompt: `Detect the language of the following text. Return the language code from this list: ${supportedCodes}.
 

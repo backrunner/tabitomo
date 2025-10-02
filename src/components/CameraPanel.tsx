@@ -1,0 +1,142 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { X, Camera, RotateCw } from 'lucide-react';
+
+interface CameraPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCapture: (imageBase64: string) => void;
+}
+
+export const CameraPanel: React.FC<CameraPanelProps> = ({ isOpen, onClose, onCapture }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const startCamera = async (mode: 'user' | 'environment') => {
+    try {
+      setIsLoading(true);
+
+      // Stop existing stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: mode,
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        }
+      });
+
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Camera error:', err);
+      setIsLoading(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const handleCapture = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0);
+        const base64Image = canvas.toDataURL('image/jpeg', 0.9);
+        onCapture(base64Image);
+        handleClose();
+      }
+    }
+  };
+
+  const handleClose = () => {
+    stopCamera();
+    onClose();
+  };
+
+  const switchCamera = () => {
+    const newMode = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(newMode);
+    startCamera(newMode);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      startCamera(facingMode);
+    } else {
+      stopCamera();
+    }
+
+    return () => {
+      stopCamera();
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/60 to-transparent">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleClose}
+            className="p-2 text-white hover:bg-white/20 rounded-full transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <button
+            onClick={switchCamera}
+            className="p-2 text-white hover:bg-white/20 rounded-full transition-colors"
+          >
+            <RotateCw className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      {/* Camera Preview */}
+      <div className="flex-1 relative overflow-hidden">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+            <div className="animate-spin h-12 w-12 border-4 border-white border-t-transparent rounded-full"></div>
+          </div>
+        )}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Bottom Controls */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-8 bg-gradient-to-t from-black/60 to-transparent">
+        <div className="flex items-center justify-center">
+          <button
+            onClick={handleCapture}
+            className="w-20 h-20 rounded-full bg-white border-4 border-gray-300 hover:bg-gray-100 transition-all duration-200 shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute inset-2 rounded-full bg-white border-2 border-gray-400"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TranslationTool } from './components/TranslationTool';
 import { SettingsPanel } from './components/SettingsPanel';
-import { hasSettings, loadSettings, AISettings } from './utils/settings';
+import { hasSettings, loadSettings, AISettings, DEFAULT_SETTINGS } from './utils/settings';
 
 export function App() {
   const [showSettings, setShowSettings] = useState(false);
@@ -16,7 +16,15 @@ export function App() {
       setShowSettings(true);
       setIsInitialSetup(true);
     } else {
-      setCurrentSettings(loadSettings());
+      const loaded = loadSettings();
+      // Ensure generalAI and vlm exist for backward compatibility
+      if (loaded && !loaded.generalAI) {
+        loaded.generalAI = DEFAULT_SETTINGS.generalAI;
+      }
+      if (loaded && !loaded.vlm) {
+        loaded.vlm = DEFAULT_SETTINGS.vlm;
+      }
+      setCurrentSettings(loaded);
     }
     setIsLoading(false);
   }, []);

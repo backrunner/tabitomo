@@ -1,13 +1,15 @@
 {
   "name": "tabitomo",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.1.0",
   "type": "module",
+  "author": "BackRunner",
   "scripts": {
     "dev": "npx vite",
+    "dev:wrangler": "wrangler pages dev --port 5173 -- npx vite",
     "build": "npx vite build",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "preview": "npx vite preview"
+    "preview": "npx vite preview",
+    "deploy": "wrangler pages deploy dist"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.42",
@@ -15,9 +17,13 @@
     "@radix-ui/react-select": "^2.2.6",
     "ai": "^5.0.59",
     "clsx": "latest",
+    "html5-qrcode": "^2.3.8",
     "kuroshiro": "^1.2.0",
     "kuroshiro-analyzer-kuromoji": "^1.1.0",
     "lucide-react": "0.522.0",
+    "openai": "^6.0.1",
+    "path-browserify": "^1.0.1",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.8",
@@ -27,6 +33,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.19",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.25",
     "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
@@ -44,6 +51,7 @@
     "tailwindcss": "3.4.17",
     "typescript": "^5.9.3",
     "unocss": "^66.5.2",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "wrangler": "^4.40.3"
   }
 }
