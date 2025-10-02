@@ -2,6 +2,7 @@
   "name": "tabitomo",
   "version": "0.1.0",
   "type": "module",
+  "license": "Apache-2.0",
   "author": "BackRunner",
   "scripts": {
     "dev": "npx vite",
