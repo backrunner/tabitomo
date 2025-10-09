@@ -449,8 +449,12 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   };
   // Handle audio recording
   const startRecording = async () => {
-    setIsRecording(true);
+    // Clear existing text when starting new recording
+    setSourceText('');
+    setTargetText('');
     setError(null);
+
+    setIsRecording(true);
     setInterimTranscript('');
 
     // Use SiliconFlow transcription if configured
@@ -1273,11 +1277,11 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                 />
                 {/* Audio recording button (visible in text mode, hidden in Q/A) */}
                 {inputMethod !== 'qa' && (
-                  <div className="absolute right-3 bottom-3">
+                  <div className="absolute right-2 bottom-3">
                     {isRecording ? (
                       <button
                         onClick={stopRecording}
-                        className="p-2 bg-red-500 text-white rounded-full shadow-md btn-pop flex items-center justify-center"
+                        className="p-2 bg-red-500 text-white rounded-full shadow-md btn-pop flex items-center justify-center w-8 h-8"
                         title="Stop recording"
                       >
                         <div className="w-3 h-3 bg-white rounded-sm"></div>
@@ -1285,7 +1289,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                     ) : (
                       <button
                         onClick={startRecording}
-                        className="p-2 bg-indigo-500 text-white rounded-full shadow-md btn-pop"
+                        className="p-2 bg-indigo-500 text-white rounded-full shadow-md btn-pop flex items-center justify-center w-8 h-8"
                         title="Start recording"
                       >
                         <Mic className="h-4 w-4" />
