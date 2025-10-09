@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Copy, Check, Loader2 } from 'lucide-react';
 interface TranslationResultProps {
   inputText: string;

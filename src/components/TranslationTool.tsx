@@ -5,7 +5,7 @@ import { speakText, getSpeechLocale } from '../utils/speech';
 import { useSiliconFlowSpeech, transcribeAudioSiliconFlow } from '../utils/audioTranscription';
 import { performOCR, imageToBase64, streamTranslateImageWithVLM } from '../utils/imageOcr';
 import { explainWord, quickQA } from '../utils/explanation';
-import { Mic, Image as ImageIcon, ArrowUpDown, X, Copy, Check, Volume2, Camera, Keyboard, Settings, MessageCircle, BookOpen } from 'lucide-react';
+import { Mic, Image as ImageIcon, ArrowUpDown, X, Copy, Check, Volume2, Camera, Keyboard, Settings, MessageCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { AISettings } from '../utils/settings';
 import { CameraPanel } from './CameraPanel';

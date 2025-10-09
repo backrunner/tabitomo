@@ -1,5 +1,4 @@
 import { generateObject, generateText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { z } from 'zod';
 import { AISettings } from './settings';
@@ -57,9 +56,12 @@ const translationSchema = z.object({
 
 // Initialize AI client based on provider
 const getAIClient = (settings: AISettings) => {
-  // Use general AI service if configured
-  const apiKey = settings.generalAI.apiKey || settings.apiKey;
-  const endpoint = settings.generalAI.endpoint || settings.endpoint;
+  // Priority: 1. Translation service settings (if fully configured), 2. General AI service
+  // Check if Translation service is fully configured (all three fields must be present)
+  const useTranslationService = !!(settings.apiKey && settings.endpoint && settings.modelName);
+
+  const apiKey = useTranslationService ? settings.apiKey : settings.generalAI.apiKey;
+  const endpoint = useTranslationService ? settings.endpoint : settings.generalAI.endpoint;
 
   if (!apiKey) {
     throw new Error('API key is not configured');
@@ -107,7 +109,9 @@ export async function translateText(
 
   try {
     const client = getAIClient(settings);
-    const modelName = settings.generalAI.modelName || settings.modelName;
+    // Priority: 1. Translation service (if fully configured), 2. General AI service
+    const useTranslationService = !!(settings.apiKey && settings.endpoint && settings.modelName);
+    const modelName = useTranslationService ? settings.modelName : settings.generalAI.modelName;
     const sourceLangName = SUPPORTED_LANGUAGES[sourceLang];
     const targetLangName = SUPPORTED_LANGUAGES[targetLang];
 
@@ -172,7 +176,9 @@ export async function detectLanguage(text: string, settings: AISettings): Promis
 
   try {
     const client = getAIClient(settings);
-    const modelName = settings.generalAI.modelName || settings.modelName;
+    // Priority: 1. Translation service (if fully configured), 2. General AI service
+    const useTranslationService = !!(settings.apiKey && settings.endpoint && settings.modelName);
+    const modelName = useTranslationService ? settings.modelName : settings.generalAI.modelName;
 
     const languageDetectionSchema = z.object({
       languageCode: z.string().describe('The detected language code'),

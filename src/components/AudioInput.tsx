@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Mic, Square, Loader2 } from 'lucide-react';
 interface AudioInputProps {
   onTranslate: (text: string) => void;
@@ -17,15 +17,17 @@ export function AudioInput({
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       // @ts-ignore - TypeScript doesn't know about webkitSpeechRecognition
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.lang = 'zh-CN'; // Set language to Chinese
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = Array.from(event.results).map((result: any) => result[0].transcript).join('');
-        setRecordedText(transcript);
-      };
-      recognitionRef.current.start();
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.lang = 'zh-CN'; // Set language to Chinese
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = Array.from(event.results).map((result: any) => result[0].transcript).join('');
+          setRecordedText(transcript);
+        };
+        recognitionRef.current.start();
+      }
     } else {
       // Mock recording for browsers that don't support SpeechRecognition
       setTimeout(() => {

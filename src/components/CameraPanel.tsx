@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { X, Camera, RotateCw } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { X, RotateCw } from 'lucide-react';
 
 interface CameraPanelProps {
   isOpen: boolean;
