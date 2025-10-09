@@ -1,0 +1,14 @@
+# Cross-Origin Isolation for Whisper.wasm (SharedArrayBuffer support)
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+
+# Allow embedding of resources with proper CORS
+/*.js
+  Cross-Origin-Resource-Policy: cross-origin
+/*.css
+  Cross-Origin-Resource-Policy: cross-origin
+/*.wasm
+  Cross-Origin-Resource-Policy: cross-origin
+/*.gz
+  Cross-Origin-Resource-Policy: cross-origin

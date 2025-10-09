@@ -11,15 +11,20 @@ export default defineConfig({
     UnoCSS(),
     react(),
     {
-      name: 'kuromoji-dict-middleware',
+      name: 'configure-response-headers',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
+          // Add cross-origin isolation headers for Whisper.wasm (SharedArrayBuffer support)
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+
           // Serve kuromoji .gz files with proper headers
           if (req.url?.includes('/kuromoji/dict/') && req.url?.endsWith('.gz')) {
             // Don't let the browser auto-decompress
             res.setHeader('Content-Type', 'application/gzip');
             res.setHeader('Content-Encoding', 'identity');
           }
+
           next();
         });
       }
