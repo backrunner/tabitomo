@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { translateText, SUPPORTED_LANGUAGES, type LanguageCode } from '../utils/translation/translation';
-import { addFuriganaAnnotations } from '../utils/language/japanese';
 import { speakText, getSpeechLocale } from '../utils/audio/speech';
 import { useSiliconFlowSpeech, transcribeAudioSiliconFlow } from '../utils/audio/audioTranscription';
 import { RealtimeTranscriptionService } from '../utils/audio/realtimeTranscription';
@@ -233,8 +232,11 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   // Generate furigana HTML when target text changes and target is Japanese
   useEffect(() => {
     if (targetText && targetLang === 'ja') {
-      addFuriganaAnnotations(targetText).then(html => {
-        setFuriganaHtml(html);
+      // Dynamically import Japanese utilities only when needed
+      import('../utils/language/japanese').then(({ addFuriganaAnnotations }) => {
+        addFuriganaAnnotations(targetText).then(html => {
+          setFuriganaHtml(html);
+        });
       });
     } else {
       setFuriganaHtml(null);

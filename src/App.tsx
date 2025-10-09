@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { TranslationTool } from './components/TranslationTool';
-import { SettingsPanel } from './components/SettingsPanel';
 import { Toaster } from './components/ui/toaster';
 import { loadSettings, saveSettings, AISettings, DEFAULT_SETTINGS } from './utils/config/settings';
+
+// Lazy load SettingsPanel - only loaded when user opens settings
+const SettingsPanel = lazy(() => import('./components/SettingsPanel').then(module => ({ default: module.SettingsPanel })));
 
 export function App() {
   const [showSettings, setShowSettings] = useState(false);
@@ -66,13 +68,15 @@ export function App() {
         />
       )}
 
-      {/* Settings Panel */}
-      <SettingsPanel
-        isOpen={showSettings}
-        onClose={handleSettingsClose}
-        onSave={handleSettingsSave}
-        isInitialSetup={isInitialSetup}
-      />
+      {/* Settings Panel - Lazy Loaded */}
+      <Suspense fallback={null}>
+        <SettingsPanel
+          isOpen={showSettings}
+          onClose={handleSettingsClose}
+          onSave={handleSettingsSave}
+          isInitialSetup={isInitialSetup}
+        />
+      </Suspense>
 
       {/* Toast Notifications */}
       <Toaster />

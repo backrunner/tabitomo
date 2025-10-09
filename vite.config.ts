@@ -114,5 +114,24 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     copyPublicDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate vendor chunks for better caching
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': [
+            'lucide-react',
+            '@radix-ui/react-select',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-toast',
+            'react-dropzone'
+          ],
+          'vendor-ai': ['ai', '@ai-sdk/openai', '@ai-sdk/openai-compatible', 'openai'],
+          'vendor-japanese': ['kuroshiro', 'kuroshiro-analyzer-kuromoji', 'kuromoji'],
+          'vendor-markdown': ['marked', 'react-markdown'],
+          'vendor-misc': ['html5-qrcode', 'qrcode', 'clsx', 'tailwind-merge', 'zod'],
+        }
+      }
+    }
   },
 });
