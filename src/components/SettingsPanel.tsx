@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, Settings as SettingsIcon, Sparkles, Mic, Image as ImageIcon, ArrowLeftRight } from 'lucide-react';
+import { X, Save, Settings as SettingsIcon, Sparkles, Mic, Image as ImageIcon, ArrowLeftRight, Languages } from 'lucide-react';
 import { AISettings, saveSettings, loadSettings, DEFAULT_SETTINGS, OPENAI_ENDPOINT, DASHSCOPE_ENDPOINT } from '../utils/config/settings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
 import { ImportExportDialog } from './ImportExportDialog';
@@ -90,17 +90,21 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
           <Tabs defaultValue="general">
             {!isInitialSetup && (
               <TabsList className="w-full grid grid-cols-4 mb-6">
-                <TabsTrigger value="general">
-                  General
+                <TabsTrigger value="general" className="flex flex-col items-center gap-1 px-2 py-2">
+                  <SettingsIcon className="w-4 h-4" />
+                  <span className="text-xs sm:text-sm">General</span>
                 </TabsTrigger>
-                <TabsTrigger value="translation">
-                  Translation
+                <TabsTrigger value="translation" className="flex flex-col items-center gap-1 px-2 py-2">
+                  <Languages className="w-4 h-4" />
+                  <span className="text-xs sm:text-sm">Translate</span>
                 </TabsTrigger>
-                <TabsTrigger value="speech">
-                  Speech
+                <TabsTrigger value="speech" className="flex flex-col items-center gap-1 px-2 py-2">
+                  <Mic className="w-4 h-4" />
+                  <span className="text-xs sm:text-sm">Speech</span>
                 </TabsTrigger>
-                <TabsTrigger value="image">
-                  Image
+                <TabsTrigger value="image" className="flex flex-col items-center gap-1 px-2 py-2">
+                  <ImageIcon className="w-4 h-4" />
+                  <span className="text-xs sm:text-sm">Image</span>
                 </TabsTrigger>
               </TabsList>
             )}
