@@ -3,6 +3,7 @@ import { translateText, SUPPORTED_LANGUAGES, type LanguageCode } from '../utils/
 import { addFuriganaAnnotations } from '../utils/language/japanese';
 import { speakText, getSpeechLocale } from '../utils/audio/speech';
 import { useSiliconFlowSpeech, transcribeAudioSiliconFlow } from '../utils/audio/audioTranscription';
+import { RealtimeTranscriptionService } from '../utils/audio/realtimeTranscription';
 import { performOCR, imageToBase64, streamTranslateImageWithVLM } from '../utils/image/imageOcr';
 import { explainWord, quickQA } from '../utils/translation/explanation';
 import { Mic, Image as ImageIcon, ArrowUpDown, X, Copy, Check, Volume2, Camera, Keyboard, Settings, MessageCircle } from 'lucide-react';
@@ -90,6 +91,9 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const realtimeTranscriptionRef = useRef<RealtimeTranscriptionService | null>(null);
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const realtimeTranslationTimerRef = useRef<NodeJS.Timeout | null>(null);
   // Image state
   const [image, setImage] = useState<string | null>(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
@@ -443,45 +447,105 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   const startRecording = async () => {
     setIsRecording(true);
     setError(null);
+    setInterimTranscript('');
 
     // Use SiliconFlow transcription if configured
     if (useSiliconFlowForSpeech) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioChunksRef.current = [];
+      // Check if realtime transcription is enabled
+      const useRealtime = settings.speechRecognition.enableRealtimeTranscription !== false;
 
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
+      if (useRealtime) {
+        // Use realtime transcription with VAD
+        console.log('[Realtime] Starting realtime transcription...');
+        try {
+          // Helper to determine if source language uses spaces
+          const sourceLangUsesSpaces = !['zh', 'ja', 'ko'].includes(sourceLang);
 
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
-        };
+          realtimeTranscriptionRef.current = new RealtimeTranscriptionService(settings, {
+            onTranscript: (text: string, isFinal: boolean) => {
+              console.log('[Realtime] Received transcript:', text, 'isFinal:', isFinal);
 
-        mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+              if (isFinal) {
+                // Final transcript - append to source text
+                setSourceText(prev => {
+                  if (!prev) return text;
+                  // Smart joining: use space for languages that use spaces, no space for CJK
+                  const separator = sourceLangUsesSpaces ? ' ' : '';
+                  return prev + separator + text;
+                });
 
-          try {
-            const transcribedText = await transcribeAudioSiliconFlow(audioBlob, settings);
-            setSourceText(transcribedText);
-            if (transcribedText) {
-              handleTranslate(transcribedText, sourceLang, targetLang);
+                // Clear interim transcript
+                setInterimTranscript('');
+
+                // Debounce translation to avoid too many API calls
+                if (realtimeTranslationTimerRef.current) {
+                  clearTimeout(realtimeTranslationTimerRef.current);
+                }
+
+                realtimeTranslationTimerRef.current = setTimeout(() => {
+                  const currentText = sourceText + (sourceLangUsesSpaces ? ' ' : '') + text;
+                  if (currentText.trim()) {
+                    handleTranslate(currentText.trim(), sourceLang, targetLang);
+                  }
+                }, 800); // Wait 800ms after last final transcript before translating
+              } else {
+                // Interim result - show as preview
+                setInterimTranscript(text);
+              }
+            },
+            onError: (error: Error) => {
+              console.error('[Realtime] Error:', error);
+              setError(error.message);
+            },
+          });
+
+          await realtimeTranscriptionRef.current.start();
+          console.log('[Realtime] Realtime transcription started');
+        } catch (err) {
+          console.error('[Realtime] Failed to start realtime transcription:', err);
+          setError('Failed to access microphone for realtime transcription');
+          setIsRecording(false);
+        }
+      } else {
+        // Use traditional recording (wait for full audio)
+        console.log('[Audio] Starting traditional audio recording...');
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioChunksRef.current = [];
+
+          const mediaRecorder = new MediaRecorder(stream);
+          mediaRecorderRef.current = mediaRecorder;
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              audioChunksRef.current.push(event.data);
             }
-          } catch (err) {
-            console.error('Transcription error:', err);
-            setError(err instanceof Error ? err.message : 'Transcription failed');
-          }
+          };
 
-          // Stop all tracks
-          stream.getTracks().forEach(track => track.stop());
-        };
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
 
-        mediaRecorder.start();
-      } catch (err) {
-        console.error('Failed to start recording:', err);
-        setError('Failed to access microphone');
-        setIsRecording(false);
+            try {
+              const transcribedText = await transcribeAudioSiliconFlow(audioBlob, settings);
+              setSourceText(transcribedText);
+              if (transcribedText) {
+                handleTranslate(transcribedText, sourceLang, targetLang);
+              }
+            } catch (err) {
+              console.error('Transcription error:', err);
+              setError(err instanceof Error ? err.message : 'Transcription failed');
+            }
+
+            // Stop all tracks
+            stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+        } catch (err) {
+          console.error('Failed to start recording:', err);
+          setError('Failed to access microphone');
+          setIsRecording(false);
+        }
       }
     } else {
       // Use Web Speech API
@@ -529,6 +593,28 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
 
   const stopRecording = () => {
     setIsRecording(false);
+
+    // Clear any pending translation timer
+    if (realtimeTranslationTimerRef.current) {
+      clearTimeout(realtimeTranslationTimerRef.current);
+      realtimeTranslationTimerRef.current = null;
+    }
+
+    // Stop realtime transcription if active
+    if (realtimeTranscriptionRef.current && realtimeTranscriptionRef.current.isActive()) {
+      console.log('[Realtime] Stopping realtime transcription...');
+      realtimeTranscriptionRef.current.stop();
+      realtimeTranscriptionRef.current = null;
+
+      // Clear interim transcript
+      setInterimTranscript('');
+
+      // Translate accumulated text if not already translating
+      if (sourceText && !isTranslating) {
+        handleTranslate(sourceText, sourceLang, targetLang);
+      }
+      return;
+    }
 
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
@@ -653,7 +739,10 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
           const occupiedRects: Array<{ x: number; y: number; width: number; height: number }> = [];
 
           // Helper function to check if two rectangles overlap
-          const checkOverlap = (rect1: any, rect2: any): boolean => {
+          const checkOverlap = (
+            rect1: { x: number; y: number; width: number; height: number },
+            rect2: { x: number; y: number; width: number; height: number }
+          ): boolean => {
             return !(
               rect1.x + rect1.width < rect2.x ||
               rect2.x + rect2.width < rect1.x ||
@@ -1164,7 +1253,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                 {/* Textarea for text/audio input */}
                 <textarea
                   ref={textareaRef}
-                  value={sourceText}
+                  value={sourceText + (interimTranscript && isRecording ? (sourceText ? ' ' : '') + interimTranscript : '')}
                   onChange={handleTextChange}
                   placeholder={isRecording
                     ? 'Listening...'
@@ -1176,6 +1265,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                   }
                   className="w-full min-h-[8rem] max-h-[12.5rem] p-3 pr-12 rounded-2xl border-2 border-indigo-100 dark:border-gray-600 focus:ring-2 focus:ring-indigo-300 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 resize-none cute-shadow overflow-y-auto"
                   style={{ height: 'auto' }}
+                  readOnly={isRecording}
                 />
                 {/* Audio recording button (visible in text mode, hidden in Q/A) */}
                 {inputMethod !== 'qa' && (

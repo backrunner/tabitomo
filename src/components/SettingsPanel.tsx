@@ -1,9 +1,24 @@
 import React, { useState } from 'react';
-import { X, Save, Settings as SettingsIcon, Sparkles, Mic, Image as ImageIcon, ArrowLeftRight, Languages } from 'lucide-react';
+import { X, Save, Settings as SettingsIcon, Sparkles, Mic, Image as ImageIcon, ArrowLeftRight, Languages, Download, CheckCircle } from 'lucide-react';
 import { AISettings, saveSettings, loadSettings, DEFAULT_SETTINGS, OPENAI_ENDPOINT, DASHSCOPE_ENDPOINT } from '../utils/config/settings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
 import { ImportExportDialog } from './ImportExportDialog';
 import { Switch } from './ui/switch';
+import { ConfirmDialog } from './ConfirmDialog';
+import { localWhisperService, WhisperModelSize } from '../utils/audio/localWhisper';
+import { toast } from './ui/use-toast';
+
+// Network Information API types (not fully standardized)
+interface NetworkInformation {
+  saveData?: boolean;
+  effectiveType?: '4g' | '3g' | '2g' | 'slow-2g';
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+  mozConnection?: NetworkInformation;
+  webkitConnection?: NetworkInformation;
+}
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -27,6 +42,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
   const [isSaving, setIsSaving] = useState(false);
   const [showImportExport, setShowImportExport] = useState(false);
 
+  // Local Whisper model download state
+  const [isDownloadingModel, setIsDownloadingModel] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
+  const [downloadConfirmInfo, setDownloadConfirmInfo] = useState({ networkType: '', modelSize: '', size: '' });
+
   const handleSave = () => {
     setIsSaving(true);
     saveSettings(settings);
@@ -42,6 +63,68 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
     setSettings(importedSettings);
     saveSettings(importedSettings);
     onSave(importedSettings);
+  };
+
+  // Download whisper model
+  const handleDownloadModel = async () => {
+    const modelSize = settings.speechRecognition.whisperModel || 'base';
+    const modelInfo = localWhisperService.getModelInfo(modelSize as WhisperModelSize);
+
+    // Detect if user is on mobile or metered connection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const nav = navigator as NavigatorWithConnection;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+    const isMetered = connection?.saveData || connection?.effectiveType === 'slow-2g' || connection?.effectiveType === '2g' || connection?.effectiveType === '3g';
+
+    // Show confirmation if on mobile or metered network
+    if (isMobile || isMetered) {
+      const networkType = isMetered ? 'metered/slow' : 'mobile';
+      setDownloadConfirmInfo({
+        networkType,
+        modelSize,
+        size: modelInfo.size,
+      });
+      setShowDownloadConfirm(true);
+    } else {
+      // Directly download if not on mobile/metered network
+      await executeDownload();
+    }
+  };
+
+  // Execute model download
+  const executeDownload = async () => {
+    const modelSize = settings.speechRecognition.whisperModel || 'base';
+
+    try {
+      setIsDownloadingModel(true);
+      setDownloadProgress(0);
+
+      await localWhisperService.downloadModel(modelSize as WhisperModelSize, (progress) => {
+        setDownloadProgress(progress.percentage);
+      });
+
+      // Update settings to mark model as downloaded
+      const updatedSettings = {
+        ...settings,
+        speechRecognition: {
+          ...settings.speechRecognition,
+          whisperModelDownloaded: true
+        }
+      };
+      setSettings(updatedSettings);
+      saveSettings(updatedSettings);
+
+      setDownloadProgress(100);
+    } catch (error) {
+      console.error('Failed to download model:', error);
+      toast({
+        title: 'Download Failed',
+        description: 'Failed to download model. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloadingModel(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -269,9 +352,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Provider
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <button
-                        onClick={() => setSettings({ ...settings, speechRecognition: { provider: 'web-speech' } })}
+                        onClick={() => setSettings({ ...settings, speechRecognition: { ...settings.speechRecognition, provider: 'web-speech' } })}
                         className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.speechRecognition.provider === 'web-speech' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
                         <div className="text-sm font-bold text-gray-800 dark:text-white">Web Speech</div>
@@ -281,6 +364,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                         onClick={() => setSettings({
                           ...settings,
                           speechRecognition: {
+                            ...settings.speechRecognition,
                             provider: 'siliconflow',
                             apiKey: settings.apiKey
                           }
@@ -289,6 +373,19 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                       >
                         <div className="text-sm font-bold text-gray-800 dark:text-white">SiliconFlow</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">AI-powered</div>
+                      </button>
+                      <button
+                        onClick={() => setSettings({
+                          ...settings,
+                          speechRecognition: {
+                            ...settings.speechRecognition,
+                            provider: 'local-whisper'
+                          }
+                        })}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.speechRecognition.provider === 'local-whisper' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
+                      >
+                        <div className="text-sm font-bold text-gray-800 dark:text-white">Local Whisper</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Offline</div>
                       </button>
                     </div>
                   </div>
@@ -317,6 +414,97 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                       </p>
                     </div>
                   )}
+
+                  {settings.speechRecognition.provider === 'local-whisper' && (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Whisper Model
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {(['tiny', 'base', 'small'] as WhisperModelSize[]).map((size) => {
+                            const modelInfo = localWhisperService.getModelInfo(size);
+                            return (
+                              <button
+                                key={size}
+                                onClick={() => setSettings({
+                                  ...settings,
+                                  speechRecognition: {
+                                    ...settings.speechRecognition,
+                                    whisperModel: size,
+                                    whisperModelDownloaded: false // Reset download status when changing model
+                                  }
+                                })}
+                                className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.speechRecognition.whisperModel === size ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
+                              >
+                                <div className="text-sm font-bold text-gray-800 dark:text-white capitalize">{size}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{modelInfo.size}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {localWhisperService.getModelInfo(settings.speechRecognition.whisperModel || 'base').description}
+                        </p>
+                      </div>
+
+                      {/* Model Download Button */}
+                      <div className="space-y-1.5">
+                        {localWhisperService.isModelDownloaded(settings.speechRecognition.whisperModel || 'base') || settings.speechRecognition.whisperModelDownloaded ? (
+                          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800">
+                            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-green-800 dark:text-green-200">Model Downloaded</div>
+                              <div className="text-xs text-green-600 dark:text-green-400">Ready for offline transcription</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={handleDownloadModel}
+                            disabled={isDownloadingModel}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+                          >
+                            {isDownloadingModel ? (
+                              <>
+                                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                <span>Downloading... {Math.round(downloadProgress)}%</span>
+                              </>
+                            ) : (
+                              <>
+                                <Download className="w-4 h-4" />
+                                <span>Download {settings.speechRecognition.whisperModel || 'base'} Model</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Realtime Transcription Toggle */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <label htmlFor="realtimeTranscription" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Enable Realtime Transcription
+                        </label>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          Transcribe audio in real-time using VAD (Voice Activity Detection)
+                        </p>
+                      </div>
+                      <Switch
+                        id="realtimeTranscription"
+                        checked={settings.speechRecognition.enableRealtimeTranscription ?? true}
+                        onCheckedChange={(checked: boolean) => setSettings({
+                          ...settings,
+                          speechRecognition: {
+                            ...settings.speechRecognition,
+                            enableRealtimeTranscription: checked
+                          }
+                        })}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Info Box */}
@@ -325,6 +513,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                     <strong>Web Speech:</strong> Uses your browser's built-in speech recognition (free, works offline).
                     <br />
                     <strong>SiliconFlow:</strong> AI-powered recognition with better accuracy for multiple languages.
+                    <br />
+                    <strong>Local Whisper:</strong> OpenAI Whisper running locally in your browser (requires model download, fully offline).
                   </p>
                 </div>
               </div>
@@ -592,6 +782,19 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
         onClose={() => setShowImportExport(false)}
         currentSettings={settings}
         onImport={handleImport}
+      />
+
+      {/* Download Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDownloadConfirm}
+        onClose={() => setShowDownloadConfirm(false)}
+        onConfirm={executeDownload}
+        title="Download Model"
+        description={`You are on a ${downloadConfirmInfo.networkType} network. Downloading the "${downloadConfirmInfo.modelSize}" model will use approximately ${downloadConfirmInfo.size} of data. Do you want to continue?`}
+        confirmText="Download"
+        cancelText="Cancel"
+        variant="warning"
+        icon="download"
       />
     </div>
   );

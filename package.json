@@ -19,6 +19,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-toast": "^1.2.15",
+    "@remotion/whisper-web": "^4.0.356",
     "ai": "^5.0.59",
     "clsx": "latest",
     "html5-qrcode": "^2.3.8",

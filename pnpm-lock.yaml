@@ -23,6 +23,9 @@ importers:
       '@radix-ui/react-toast':
         specifier: ^1.2.15
         version: 1.2.15(@types/react-dom@18.3.7(@types/react@18.3.25))(@types/react@18.3.25)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@remotion/whisper-web':
+        specifier: ^4.0.356
+        version: 4.0.356
       ai:
         specifier: ^5.0.59
         version: 5.0.59(zod@4.1.11)
@@ -1602,6 +1605,12 @@ packages:
   '@remix-run/router@1.23.0':
     resolution: {integrity: sha512-O3rHJzAQKamUz1fvE0Qaw0xSFqsA/yafi2iqeE0pvdFtCO1viYx8QL6f3Ln/aCCTLxs68SLf0KPM9eSeM8yBnA==}
     engines: {node: '>=14.0.0'}
+
+  '@remotion/captions@4.0.356':
+    resolution: {integrity: sha512-meQLNvDZQStmX9j91Ym9jcEpM09Q+AA/TyXsNT38UjBYFCGjIGloJtCbAgljR9FKsPmrcD1aNDmYfE5zoToisQ==}
+
+  '@remotion/whisper-web@4.0.356':
+    resolution: {integrity: sha512-cP5yFzc1+GRgww/N5oicMJVlhg5UmdNCmjDPZOIK88CP8tXFz0qxs+CuOvvOSQwg64X/la5tK0crwF/JU/3PbA==}
 
   '@rolldown/pluginutils@1.0.0-beta.38':
     resolution: {integrity: sha512-N/ICGKleNhA5nc9XXQG/kkKHJ7S55u0x0XUJbbkmdCnFuoRkM1Il12q9q0eX19+M7KKUEPw/daUPIRnxhcxAIw==}
@@ -6236,6 +6245,12 @@ snapshots:
   '@radix-ui/rect@1.1.1': {}
 
   '@remix-run/router@1.23.0': {}
+
+  '@remotion/captions@4.0.356': {}
+
+  '@remotion/whisper-web@4.0.356':
+    dependencies:
+      '@remotion/captions': 4.0.356
 
   '@rolldown/pluginutils@1.0.0-beta.38': {}
 
