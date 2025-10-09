@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { translateText, SUPPORTED_LANGUAGES, type LanguageCode } from '../utils/translation/translation';
 import { addFuriganaAnnotations } from '../utils/language/japanese';
 import { speakText, getSpeechLocale } from '../utils/audio/speech';
@@ -9,8 +9,10 @@ import { explainWord, quickQA } from '../utils/translation/explanation';
 import { Mic, Image as ImageIcon, ArrowUpDown, X, Copy, Check, Volume2, Camera, Keyboard, Settings, MessageCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { AISettings } from '../utils/config/settings';
-import { CameraPanel } from './CameraPanel';
 import { ImageLightbox } from './ImageLightbox';
+
+// Lazy load CameraPanel - only loaded when user opens camera
+const CameraPanel = lazy(() => import('./CameraPanel').then(module => ({ default: module.CameraPanel })));
 import { marked } from 'marked';
 import { useToast } from './ui/use-toast';
 import {
@@ -1430,12 +1432,14 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
           </div>
       </div>
 
-      {/* Camera Panel */}
-      <CameraPanel
-        isOpen={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
-        onCapture={handleCameraCapture}
-      />
+      {/* Camera Panel - Lazy Loaded */}
+      <Suspense fallback={null}>
+        <CameraPanel
+          isOpen={isCameraOpen}
+          onClose={() => setIsCameraOpen(false)}
+          onCapture={handleCameraCapture}
+        />
+      </Suspense>
 
       {/* Image Lightbox */}
       <ImageLightbox

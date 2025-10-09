@@ -44,7 +44,7 @@ export default defineConfig({
         start_url: '/',
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,wasm}'],
         runtimeCaching: [
           {
             urlPattern: /\/kuromoji\/dict\/.*\.gz$/,
@@ -53,6 +53,21 @@ export default defineConfig({
               cacheName: 'kuromoji-dict-cache',
               expiration: {
                 maxEntries: 50,
+                maxAgeSeconds: 365 * 24 * 60 * 60 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // Cache WASM files (mozjpeg encoder from @jsquash/jpeg)
+            urlPattern: /.*\.wasm$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'wasm-cache',
+              expiration: {
+                maxEntries: 10,
                 maxAgeSeconds: 365 * 24 * 60 * 60 // 1 year
               },
               cacheableResponse: {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, RotateCw } from 'lucide-react';
+import { compressImage } from '../utils/image/imageCompression';
 
 interface CameraPanelProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ export const CameraPanel: React.FC<CameraPanelProps> = ({ isOpen, onClose, onCap
   const streamRef = useRef<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const startCamera = async (mode: 'user' | 'environment') => {
     try {
@@ -50,7 +52,7 @@ export const CameraPanel: React.FC<CameraPanelProps> = ({ isOpen, onClose, onCap
     }
   };
 
-  const handleCapture = () => {
+  const handleCapture = async () => {
     if (videoRef.current) {
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
@@ -59,9 +61,29 @@ export const CameraPanel: React.FC<CameraPanelProps> = ({ isOpen, onClose, onCap
 
       if (ctx) {
         ctx.drawImage(videoRef.current, 0, 0);
-        const base64Image = canvas.toDataURL('image/jpeg', 0.9);
-        onCapture(base64Image);
-        handleClose();
+
+        try {
+          setIsCompressing(true);
+
+          // Compress using WASM-based mozjpeg
+          // Max 1920px on longest side, quality 85 (excellent quality)
+          const compressedImage = await compressImage(canvas, {
+            maxWidth: 1920,
+            maxHeight: 1920,
+            quality: 85
+          });
+
+          onCapture(compressedImage);
+          handleClose();
+        } catch (error) {
+          console.error('Compression failed:', error);
+          // Fallback to uncompressed if WASM fails
+          const fallbackImage = canvas.toDataURL('image/jpeg', 0.85);
+          onCapture(fallbackImage);
+          handleClose();
+        } finally {
+          setIsCompressing(false);
+        }
       }
     }
   };
@@ -116,6 +138,14 @@ export const CameraPanel: React.FC<CameraPanelProps> = ({ isOpen, onClose, onCap
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
             <div className="animate-spin h-12 w-12 border-4 border-white border-t-transparent rounded-full"></div>
+          </div>
+        )}
+        {isCompressing && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
+            <div className="flex flex-col items-center">
+              <div className="animate-spin h-12 w-12 border-4 border-white border-t-transparent rounded-full"></div>
+              <p className="text-white mt-4 text-sm">Compressing...</p>
+            </div>
           </div>
         )}
         <video
