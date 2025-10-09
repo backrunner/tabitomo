@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { TranslationTool } from './components/TranslationTool';
 import { SettingsPanel } from './components/SettingsPanel';
 import { Toaster } from './components/ui/toaster';
-import { loadSettings, saveSettings, AISettings, DEFAULT_SETTINGS } from './utils/settings';
+import { loadSettings, saveSettings, AISettings, DEFAULT_SETTINGS } from './utils/config/settings';
 
 export function App() {
   const [showSettings, setShowSettings] = useState(false);

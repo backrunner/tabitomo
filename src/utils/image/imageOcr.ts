@@ -2,8 +2,8 @@ import OpenAI from 'openai';
 import { generateObject, streamText } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { z } from 'zod';
-import { ImageOCRSettings, AISettings } from './settings';
-import { SUPPORTED_LANGUAGES, type LanguageCode } from './translation';
+import { ImageOCRSettings, AISettings } from '../config/settings';
+import { SUPPORTED_LANGUAGES, type LanguageCode } from '../translation/translation';
 
 export interface OCRTextLocation {
   text: string;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Save, Settings as SettingsIcon, Sparkles, Mic, Image as ImageIcon, ArrowLeftRight } from 'lucide-react';
-import { AISettings, saveSettings, loadSettings, DEFAULT_SETTINGS, OPENAI_ENDPOINT, DASHSCOPE_ENDPOINT } from '../utils/settings';
+import { AISettings, saveSettings, loadSettings, DEFAULT_SETTINGS, OPENAI_ENDPOINT, DASHSCOPE_ENDPOINT } from '../utils/config/settings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
 import { ImportExportDialog } from './ImportExportDialog';
 import { Switch } from './ui/switch';

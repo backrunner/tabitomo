@@ -1,6 +1,6 @@
 import { streamText } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { AISettings } from './settings';
+import { AISettings } from '../config/settings';
 import { SUPPORTED_LANGUAGES, type LanguageCode } from './translation';
 
 /**

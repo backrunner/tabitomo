@@ -1,7 +1,7 @@
 import { generateObject, generateText } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { z } from 'zod';
-import { AISettings } from './settings';
+import { AISettings } from '../config/settings';
 
 // All supported languages with their codes and English names
 export const SUPPORTED_LANGUAGES = {

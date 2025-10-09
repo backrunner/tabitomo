@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { X, ArrowLeftRight, Upload, HardDriveUpload, QrCode, Scan, Eye, EyeOff, FileText } from 'lucide-react';
-import { AISettings } from '../utils/settings';
+import { AISettings } from '../utils/config/settings';
 import {
   exportSettingsToFile,
   importSettingsFromFile,
   generateSettingsQRCode,
   importSettingsFromQRCode,
-} from '../utils/settingsExport';
+} from '../utils/config/settingsExport';
 import { Html5Qrcode } from 'html5-qrcode';
 
 interface ImportExportDialogProps {

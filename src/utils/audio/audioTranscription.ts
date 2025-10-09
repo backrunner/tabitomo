@@ -1,4 +1,4 @@
-import { AISettings } from './settings';
+import { AISettings } from '../config/settings';
 
 /**
  * Check if the provider is SiliconFlow for speech recognition
