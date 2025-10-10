@@ -1,6 +1,7 @@
 export interface SpeechRecognitionSettings {
   provider: 'web-speech' | 'siliconflow' | 'local-whisper';
   apiKey?: string; // Only for SiliconFlow
+  modelName?: string; // Model name for AI Service providers (e.g., TeleAI/TeleSpeechASR for SiliconFlow)
   enableRealtimeTranscription?: boolean; // Enable realtime transcription with VAD
   whisperModel?: 'tiny' | 'base' | 'small'; // Whisper model size for local-whisper
   whisperModelDownloaded?: boolean; // Track if whisper model is downloaded
@@ -61,6 +62,7 @@ export const DEFAULT_SETTINGS: AISettings = {
   apiKey: '',
   speechRecognition: {
     provider: 'web-speech',
+    modelName: 'TeleAI/TeleSpeechASR', // Default model for AI Service
     enableRealtimeTranscription: true, // Enable by default
     whisperModel: 'base', // Default whisper model
     whisperModelDownloaded: false,

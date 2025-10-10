@@ -23,7 +23,9 @@ export async function transcribeAudioSiliconFlow(
   settings: AISettings
 ): Promise<string> {
   const formData = new FormData();
-  formData.append('model', 'FunAudioLLM/SenseVoiceSmall');
+  // Use model from settings, fallback to default if not set
+  const modelName = settings.speechRecognition.modelName || 'TeleAI/TeleSpeechASR';
+  formData.append('model', modelName);
   formData.append('file', audioBlob, 'audio.webm');
 
   const endpoint = settings.endpoint.endsWith('/')

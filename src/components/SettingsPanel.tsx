@@ -4,6 +4,7 @@ import { AISettings, saveSettings, loadSettings, DEFAULT_SETTINGS, OPENAI_ENDPOI
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
 import { ImportExportDialog } from './ImportExportDialog';
 import { Switch } from './ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ConfirmDialog } from './ConfirmDialog';
 import { localWhisperService, WhisperModelSize } from '../utils/audio/localWhisper';
 import { toast } from './ui/use-toast';
@@ -135,11 +136,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl cute-shadow">
+            <div className="p-2 bg-indigo-500 rounded-xl cute-shadow">
               {isInitialSetup ? <Sparkles className="w-5 h-5 text-white" /> : <SettingsIcon className="w-5 h-5 text-white" />}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              <h2 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white">
                 {isInitialSetup ? 'Welcome to tabitomo!' : 'Settings'}
               </h2>
               {isInitialSetup && (
@@ -371,8 +372,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                         })}
                         className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.speechRecognition.provider === 'siliconflow' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
-                        <div className="text-sm font-bold text-gray-800 dark:text-white">SiliconFlow</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">AI-powered</div>
+                        <div className="text-sm font-bold text-gray-800 dark:text-white">AI Service</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Cloud-based</div>
                       </button>
                       <button
                         onClick={() => setSettings({
@@ -384,14 +385,47 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                         })}
                         className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.speechRecognition.provider === 'local-whisper' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
-                        <div className="text-sm font-bold text-gray-800 dark:text-white">Local Whisper</div>
+                        <div className="text-sm font-bold text-gray-800 dark:text-white">Local Model</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Offline</div>
                       </button>
                     </div>
                   </div>
 
                   {settings.speechRecognition.provider === 'siliconflow' && (
-                    <div className="space-y-1.5">
+                    <>
+                      <div className="space-y-1.5">
+                        <label htmlFor="aiServiceProvider" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          AI Service Provider
+                        </label>
+                        <Select value="siliconflow" disabled>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select provider" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="siliconflow">SiliconFlow</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label htmlFor="speechModelName" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Model Name
+                        </label>
+                        <input
+                          id="speechModelName"
+                          type="text"
+                          value={settings.speechRecognition.modelName || 'TeleAI/TeleSpeechASR'}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            speechRecognition: {
+                              ...settings.speechRecognition,
+                              modelName: e.target.value
+                            }
+                          })}
+                          placeholder="TeleAI/TeleSpeechASR"
+                          className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
                       <label htmlFor="speechApiKey" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         API Key
                       </label>
@@ -413,13 +447,27 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                         Leave empty to use the same API key as translation service
                       </p>
                     </div>
+                    </>
                   )}
 
                   {settings.speechRecognition.provider === 'local-whisper' && (
                     <>
                       <div className="space-y-1.5">
+                        <label htmlFor="localModelType" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Local Model Type
+                        </label>
+                        <Select value="whisper" disabled>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select model type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="whisper">Whisper</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                          Whisper Model
+                          Whisper Model Size
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                           {(['tiny', 'base', 'small'] as WhisperModelSize[]).map((size) => {
@@ -512,9 +560,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                   <p className="text-sm text-indigo-800 dark:text-indigo-200">
                     <strong>Web Speech:</strong> Uses your browser's built-in speech recognition (free, works offline).
                     <br />
-                    <strong>SiliconFlow:</strong> AI-powered recognition with better accuracy for multiple languages.
+                    <strong>AI Service:</strong> Cloud-based AI providers (SiliconFlow) with better accuracy for multiple languages.
                     <br />
-                    <strong>Local Whisper:</strong> OpenAI Whisper running locally in your browser (requires model download, fully offline).
+                    <strong>Local Model:</strong> Run speech recognition models (Whisper) locally in your browser (requires model download, fully offline).
                   </p>
                 </div>
               </div>
@@ -758,7 +806,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+              className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-indigo-500 text-white text-sm sm:text-base font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               <Save className="w-4 h-4" />
               {isSaving ? 'Saving...' : 'Save Settings'}
@@ -767,7 +815,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-base font-bold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+              className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3.5 bg-indigo-500 text-white text-sm sm:text-base font-bold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {isSaving ? 'Starting...' : 'Start Translating'}
               <Sparkles className="w-4 h-4" />
