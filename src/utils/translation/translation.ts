@@ -141,7 +141,57 @@ export async function translateText(
       return result.text;
     }
 
-    // Use structured output for other models
+    // For general AI models, use generateText with JSON parsing for more flexibility
+    if (!useTranslationService) {
+      const result = await generateText({
+        model: client(modelName),
+        prompt: `You are a professional translator. Translate the following text from ${sourceLangName} (${sourceLang}) to ${targetLangName} (${targetLang}).
+
+Text to translate: "${text}"
+
+Instructions:
+1. Provide an accurate and natural translation
+2. Preserve the tone and style of the original text
+3. If the text contains idioms or cultural references, adapt them appropriately for the target language
+4. Maintain any formatting or special characters
+5. Return ONLY a JSON object with the translation
+
+Respond with ONLY a JSON object in this format:
+{"translation": "your translated text here"}
+
+Do not include any other text, explanation, or markdown formatting.`,
+        abortSignal,
+      });
+
+      // Try to parse JSON response, handling different structures
+      try {
+        // Remove markdown code blocks if present
+        let jsonText = result.text.trim();
+        if (jsonText.startsWith('```json')) {
+          jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+        } else if (jsonText.startsWith('```')) {
+          jsonText = jsonText.replace(/```\s*/g, '').replace(/```\s*$/g, '');
+        }
+
+        const parsed = JSON.parse(jsonText);
+
+        // Check for various possible field names
+        const translatedText = parsed.translation || parsed.translate || parsed.translatedText || parsed.text || '';
+
+        if (translatedText && typeof translatedText === 'string') {
+          return translatedText;
+        }
+
+        // If no recognized field found, throw error
+        throw new Error('Translation response does not contain a valid translation field');
+      } catch (parseError) {
+        console.warn('Failed to parse JSON response, using raw text:', result.text);
+        // Fallback: return the raw text if JSON parsing fails
+        return result.text;
+      }
+    }
+
+    // Use structured output for translation service (more strict validation)
     const result = await generateObject({
       model: client(modelName),
       schema: translationSchema,
