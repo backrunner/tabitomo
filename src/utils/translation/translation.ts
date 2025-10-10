@@ -165,13 +165,24 @@ Do not include any other text, explanation, or markdown formatting.`,
 
       // Try to parse JSON response, handling different structures
       try {
-        // Remove markdown code blocks if present
+        // Remove thinking tags and other XML-like tags that some models add
         let jsonText = result.text.trim();
+
+        // Remove thinking tags: <think>...</think>, <thinking>...</thinking>, etc.
+        jsonText = jsonText.replace(/<think>[\s\S]*?<\/think>/gi, '');
+        jsonText = jsonText.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+        jsonText = jsonText.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+        jsonText = jsonText.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+
+        // Remove markdown code blocks if present
         if (jsonText.startsWith('```json')) {
           jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
         } else if (jsonText.startsWith('```')) {
           jsonText = jsonText.replace(/```\s*/g, '').replace(/```\s*$/g, '');
         }
+
+        // Trim again after removing tags
+        jsonText = jsonText.trim();
 
         const parsed = JSON.parse(jsonText);
 
@@ -186,8 +197,13 @@ Do not include any other text, explanation, or markdown formatting.`,
         throw new Error('Translation response does not contain a valid translation field');
       } catch (parseError) {
         console.warn('Failed to parse JSON response, using raw text:', result.text);
-        // Fallback: return the raw text if JSON parsing fails
-        return result.text;
+        // Fallback: return the raw text if JSON parsing fails, but strip thinking tags
+        let cleanText = result.text;
+        cleanText = cleanText.replace(/<think>[\s\S]*?<\/think>/gi, '');
+        cleanText = cleanText.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+        cleanText = cleanText.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+        cleanText = cleanText.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+        return cleanText.trim();
       }
     }
 
