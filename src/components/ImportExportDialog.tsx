@@ -2,11 +2,11 @@ import React, { useState, useRef } from 'react';
 import { X, ArrowLeftRight, Upload, HardDriveUpload, QrCode, Scan, Eye, EyeOff, FileText } from 'lucide-react';
 import { AISettings } from '../utils/config/settings';
 import {
-  exportSettingsToFile,
-  importSettingsFromFile,
-  generateSettingsQRCode,
-  importSettingsFromQRCode,
-} from '../utils/config/settingsExport';
+  exportConfigToFile,
+  importConfigFromFile,
+  generateConfigQRCode,
+  importConfigFromQRCode,
+} from '../utils/config/export';
 import { Html5Qrcode } from 'html5-qrcode';
 
 interface ImportExportDialogProps {
@@ -44,7 +44,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
     setIsProcessing(true);
     setError(null);
     try {
-      await exportSettingsToFile(currentSettings, password);
+      await exportConfigToFile(currentSettings, password);
       setSuccess('Settings exported successfully!');
       setTimeout(() => {
         setPassword('');
@@ -67,7 +67,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
     setIsProcessing(true);
     setError(null);
     try {
-      const dataUrl = await generateSettingsQRCode(currentSettings, password);
+      const dataUrl = await generateConfigQRCode(currentSettings, password);
       setQrCodeDataUrl(dataUrl);
       setSuccess('QR code generated successfully!');
     } catch (err) {
@@ -87,7 +87,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
     setIsProcessing(true);
     setError(null);
     try {
-      const settings = await importSettingsFromFile(file, password);
+      const settings = await importConfigFromFile(file, password);
       onImport(settings);
       setSuccess('Settings imported successfully!');
       setTimeout(() => {
@@ -124,7 +124,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
         { fps: 10, qrbox: { width: 250, height: 250 } },
         async (decodedText) => {
           try {
-            const settings = await importSettingsFromQRCode(decodedText, password);
+            const settings = await importConfigFromQRCode(decodedText, password);
             await scanner.stop();
             qrScannerRef.current = null;
             setIsScanning(false);

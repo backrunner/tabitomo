@@ -150,5 +150,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ---
 
 <div align="center">
-  Made with ❤️ by the tabitomo team
+  Made with ❤️ by Alkinum
 </div>

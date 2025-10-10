@@ -150,5 +150,5 @@ tabitomo/
 ---
 
 <div align="center">
-  由 tabitomo 团队用 ❤️ 制作
+  由 Alkinum 团队用 ❤️ 制作
 </div>
