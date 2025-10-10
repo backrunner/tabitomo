@@ -1,7 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { TranslationTool } from './components/TranslationTool';
+import { UpdateNotification } from './components/UpdateNotification';
 import { Toaster } from './components/ui/toaster';
 import { loadSettings, saveSettings, AISettings, DEFAULT_SETTINGS } from './utils/config/settings';
+import { usePWAUpdate } from './hooks/usePWAUpdate';
 
 // Lazy load SettingsPanel - only loaded when user opens settings
 const SettingsPanel = lazy(() => import('./components/SettingsPanel').then(module => ({ default: module.SettingsPanel })));
@@ -11,6 +13,9 @@ export function App() {
   const [currentSettings, setCurrentSettings] = useState<AISettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialSetup, setIsInitialSetup] = useState(false);
+
+  // PWA update management
+  const { showUpdatePrompt, handleUpdate, handleDismiss } = usePWAUpdate();
 
   useEffect(() => {
     // Load settings or use defaults
@@ -80,6 +85,11 @@ export function App() {
 
       {/* Toast Notifications */}
       <Toaster />
+
+      {/* PWA Update Notification */}
+      {showUpdatePrompt && (
+        <UpdateNotification onUpdate={handleUpdate} onDismiss={handleDismiss} />
+      )}
     </div>
   );
 }

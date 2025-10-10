@@ -30,17 +30,16 @@ export default defineConfig({
       }
     },
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['kuromoji/dict/*.gz'],
       pwaAssets: {
-        preset: 'minimal-2023',
-        image: 'public/icon.png',
+        config: true,
         overrideManifestIcons: true,
       },
       manifest: {
-        name: 'tabitomo - AI-Powered Translator',
+        name: 'tabitomo - AI-Powered Translation Companion',
         short_name: 'tabitomo',
-        description: 'AI-powered multilingual translator with text, audio, and image input support',
+        description: 'Your AI-powered travel companion for instant translation. Support text, voice, and image translation with OCR.',
         theme_color: '#6366f1',
         background_color: '#ffffff',
         display: 'standalone',
@@ -49,6 +48,8 @@ export default defineConfig({
         start_url: '/',
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,wasm}'],
         runtimeCaching: [
           {

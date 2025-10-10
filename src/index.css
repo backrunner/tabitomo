@@ -83,6 +83,21 @@
 /* Custom animations and utilities for tabitomo */
 .cute-shadow {
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cute-shadow:active {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+  transform: translateY(2px);
+}
+
+.btn-pop {
+  transition: transform 0.2s ease;
+}
+
+.btn-pop:active {
+  transform: scale(0.95);
 }
 
 .animate-in {
@@ -102,12 +117,16 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes zoomIn {
