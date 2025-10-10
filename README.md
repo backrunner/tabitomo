@@ -32,12 +32,6 @@
   - Furigana support for Japanese text
   - Text-to-speech for translation results
 
-- **🎨 Beautiful Design**
-  - Modern flat design with depth
-  - Cute and friendly interface
-  - Dark mode support
-  - Smooth animations and transitions
-
 - **📱 Progressive Web App**
   - Installable on mobile and desktop
   - Offline-capable with service worker
@@ -133,15 +127,6 @@ tabitomo/
 ├── NOTICE              # Proprietary assets notice
 └── package.json        # Dependencies
 ```
-
-## 🎨 Design Philosophy
-
-tabitomo follows a modern flat design aesthetic with depth created through subtle shadows and animations:
-
-- **Flat Shadows**: Controls use `box-shadow` for depth
-- **Active Feedback**: Buttons compress on press
-- **Smooth Transitions**: 200-300ms ease transitions
-- **Cute Animations**: Bouncing loading dots, fade-in effects
 
 ## 📄 License
 
