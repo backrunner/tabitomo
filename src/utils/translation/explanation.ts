@@ -10,7 +10,8 @@ export async function* explainWord(
   word: string,
   wordLang: LanguageCode,
   explanationLang: LanguageCode,
-  settings: AISettings
+  settings: AISettings,
+  abortSignal?: AbortSignal
 ): AsyncGenerator<string, void, unknown> {
   console.log('[Explanation] Starting explanation');
   console.log('[Explanation] Text:', word);
@@ -59,6 +60,7 @@ This could be a word, sentence, or grammar pattern. Include relevant information
 Format your response in markdown. Provide ONLY the explanation, no meta-commentary.`,
         },
       ],
+      abortSignal,
     });
 
     let inThinkTag = false;
@@ -161,7 +163,8 @@ export async function* quickQA(
   question: string,
   questionLang: LanguageCode,
   answerLang: LanguageCode,
-  settings: AISettings
+  settings: AISettings,
+  abortSignal?: AbortSignal
 ): AsyncGenerator<string, void, unknown> {
   console.log('[Quick Q/A] Starting Q/A');
   console.log('[Quick Q/A] Question:', question);
@@ -209,6 +212,7 @@ Please provide a complete answer in ${answerLanguageName} including:
 Format your response in markdown. Provide ONLY the answer, no meta-commentary.`,
         },
       ],
+      abortSignal,
     });
 
     let inThinkTag = false;

@@ -282,7 +282,8 @@ export async function* streamTranslateImageWithVLM(
   imageBase64: string,
   sourceLang: LanguageCode,
   targetLang: LanguageCode,
-  settings: AISettings
+  settings: AISettings,
+  abortSignal?: AbortSignal
 ): AsyncGenerator<string, void, unknown> {
   console.log('[VLM Streaming] Starting VLM streaming translation');
   console.log('[VLM Streaming] Source language:', sourceLang);
@@ -360,6 +361,7 @@ ${settings.vlm.enableThinking ? '\n6. You may include your thinking process usin
           ],
         },
       ],
+      abortSignal,
     });
 
     let inThinkTag = false;

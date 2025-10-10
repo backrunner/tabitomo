@@ -107,6 +107,11 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Debounce timer ref
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // AbortController refs for cancelling ongoing requests
+  const translationAbortControllerRef = useRef<AbortController | null>(null);
+  const explanationAbortControllerRef = useRef<AbortController | null>(null);
+  const qaAbortControllerRef = useRef<AbortController | null>(null);
+  const imageAbortControllerRef = useRef<AbortController | null>(null);
   // Translation cache
   const translationCacheRef = useRef<Map<string, CachedTranslation>>(new Map());
   // Check if using SiliconFlow speech recognition
@@ -282,20 +287,42 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       return;
     }
 
+    // Cancel any existing translation request
+    if (translationAbortControllerRef.current) {
+      translationAbortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    translationAbortControllerRef.current = abortController;
+
     setIsTranslating(true);
     setError(null);
 
     try {
-      const result = await translateText(text, from, to, settings);
-      setTargetText(result);
-      // Cache the result
-      cacheTranslation(text, from, to, result);
+      const result = await translateText(text, from, to, settings, abortController.signal);
+
+      // Only update state if this request wasn't cancelled
+      if (!abortController.signal.aborted) {
+        setTargetText(result);
+        // Cache the result
+        cacheTranslation(text, from, to, result);
+      }
     } catch (error) {
+      // Don't show error if request was cancelled
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('[Translation] Request was cancelled');
+        return;
+      }
       console.error('Translation error:', error);
       setError(error instanceof Error ? error.message : 'Translation failed');
       setTargetText('');
     } finally {
-      setIsTranslating(false);
+      // Only clear loading state if this is still the active request
+      if (translationAbortControllerRef.current === abortController) {
+        setIsTranslating(false);
+        translationAbortControllerRef.current = null;
+      }
     }
   };
   // Handle explanation (word/sentence/grammar)
@@ -325,6 +352,15 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       return;
     }
 
+    // Cancel any existing explanation request
+    if (explanationAbortControllerRef.current) {
+      explanationAbortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    explanationAbortControllerRef.current = abortController;
+
     setIsTranslating(true);
     setError(null);
     setTargetText('');
@@ -332,7 +368,12 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
 
     try {
       let streamedText = '';
-      for await (const chunk of explainWord(word, wordLang, explanationLang, settings)) {
+      for await (const chunk of explainWord(word, wordLang, explanationLang, settings, abortController.signal)) {
+        // Check if request was cancelled
+        if (abortController.signal.aborted) {
+          break;
+        }
+
         // Handle thinking markers
         if (chunk === '___THINKING_START___') {
           setIsThinking(true);
@@ -347,12 +388,21 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
         setTargetText(streamedText);
       }
     } catch (error) {
+      // Don't show error if request was cancelled
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('[Explanation] Request was cancelled');
+        return;
+      }
       console.error('Explanation error:', error);
       setError(error instanceof Error ? error.message : 'Explanation failed');
       setTargetText('');
     } finally {
-      setIsTranslating(false);
-      setIsThinking(false);
+      // Only clear loading state if this is still the active request
+      if (explanationAbortControllerRef.current === abortController) {
+        setIsTranslating(false);
+        setIsThinking(false);
+        explanationAbortControllerRef.current = null;
+      }
     }
   };
 
@@ -383,6 +433,15 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       return;
     }
 
+    // Cancel any existing Q/A request
+    if (qaAbortControllerRef.current) {
+      qaAbortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    qaAbortControllerRef.current = abortController;
+
     setIsTranslating(true);
     setError(null);
     setTargetText('');
@@ -390,7 +449,12 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
 
     try {
       let streamedText = '';
-      for await (const chunk of quickQA(question, questionLang, answerLang, settings)) {
+      for await (const chunk of quickQA(question, questionLang, answerLang, settings, abortController.signal)) {
+        // Check if request was cancelled
+        if (abortController.signal.aborted) {
+          break;
+        }
+
         // Handle thinking markers
         if (chunk === '___THINKING_START___') {
           setIsThinking(true);
@@ -405,12 +469,21 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
         setTargetText(streamedText);
       }
     } catch (error) {
+      // Don't show error if request was cancelled
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('[Q/A] Request was cancelled');
+        return;
+      }
       console.error('Q/A error:', error);
       setError(error instanceof Error ? error.message : 'Q/A failed');
       setTargetText('');
     } finally {
-      setIsTranslating(false);
-      setIsThinking(false);
+      // Only clear loading state if this is still the active request
+      if (qaAbortControllerRef.current === abortController) {
+        setIsTranslating(false);
+        setIsThinking(false);
+        qaAbortControllerRef.current = null;
+      }
     }
   };
 
@@ -654,6 +727,15 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       return;
     }
 
+    // Cancel any existing image processing request
+    if (imageAbortControllerRef.current) {
+      imageAbortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    imageAbortControllerRef.current = abortController;
+
     try {
       setIsProcessingImage(true);
       setError(null);
@@ -667,6 +749,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
         if (!isVLMConfigured()) {
           setIsProcessingImage(false);
           setImage(null);
+          imageAbortControllerRef.current = null;
           toast({
             variant: "destructive",
             title: "VLM Service Required",
@@ -682,16 +765,30 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
         let streamedText = '';
 
         try {
-          for await (const chunk of streamTranslateImageWithVLM(base64Image, sourceLang, targetLang, settings)) {
+          for await (const chunk of streamTranslateImageWithVLM(base64Image, sourceLang, targetLang, settings, abortController.signal)) {
+            // Check if request was cancelled
+            if (abortController.signal.aborted) {
+              break;
+            }
+
             streamedText += chunk;
             setTargetText(streamedText);
           }
           console.log('[Image VLM] VLM translation completed');
         } catch (err) {
+          // Don't show error if request was cancelled
+          if (err instanceof Error && err.name === 'AbortError') {
+            console.log('[Image VLM] Request was cancelled');
+            return;
+          }
           console.error('[Image VLM] Streaming error:', err);
           setError(err instanceof Error ? err.message : 'VLM translation failed');
         } finally {
-          setIsProcessingImage(false);
+          // Only clear loading state if this is still the active request
+          if (imageAbortControllerRef.current === abortController) {
+            setIsProcessingImage(false);
+            imageAbortControllerRef.current = null;
+          }
         }
 
         console.log('[Image VLM] Complete!');
@@ -704,6 +801,13 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
 
       // Perform OCR
       const ocrTexts = await performOCR(base64Image, settings.imageOCR);
+
+      // Check if request was cancelled after OCR
+      if (abortController.signal.aborted) {
+        console.log('[Image OCR] Request was cancelled after OCR');
+        return;
+      }
+
       console.log('[Image OCR] OCR completed, found', ocrTexts.length, 'text regions');
       console.log('[Image OCR] OCR results:', ocrTexts.map((ocr, idx) => ({
         index: idx,
@@ -717,11 +821,18 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       const translations = await Promise.all(
         ocrTexts.map(async (ocr, idx) => {
           console.log(`[Image Translation] Translating text ${idx + 1}/${ocrTexts.length}: "${ocr.text}"`);
-          const result = await translateText(ocr.text, sourceLang, targetLang, settings);
+          const result = await translateText(ocr.text, sourceLang, targetLang, settings, abortController.signal);
           console.log(`[Image Translation] Result ${idx + 1}: "${result}"`);
           return result;
         })
       );
+
+      // Check if request was cancelled after translation
+      if (abortController.signal.aborted) {
+        console.log('[Image Translation] Request was cancelled after translation');
+        return;
+      }
+
       console.log('[Image Translation] All translations completed');
 
       // Create canvas for image overlay
@@ -1033,21 +1144,38 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
           console.log('[Image Translation] Target text set:', allTranslations);
 
           // Keep original image in input area, show translated in output
-          setIsProcessingImage(false);
+          // Only clear loading state if this is still the active request
+          if (imageAbortControllerRef.current === abortController) {
+            setIsProcessingImage(false);
+            imageAbortControllerRef.current = null;
+          }
           console.log('[Image Processing] Complete!');
         }
       };
       img.onerror = (err) => {
         console.error('[Canvas] Failed to load image:', err);
         setError('Failed to load image for processing');
-        setIsProcessingImage(false);
+        // Only clear loading state if this is still the active request
+        if (imageAbortControllerRef.current === abortController) {
+          setIsProcessingImage(false);
+          imageAbortControllerRef.current = null;
+        }
       };
       img.src = base64Image;
     } catch (err) {
+      // Don't show error if request was cancelled
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('[Image Processing] Request was cancelled');
+        return;
+      }
       console.error('[Image Processing] Error:', err);
       setError(err instanceof Error ? err.message : 'OCR failed');
       setImage(null);
-      setIsProcessingImage(false);
+      // Only clear loading state if this is still the active request
+      if (imageAbortControllerRef.current === abortController) {
+        setIsProcessingImage(false);
+        imageAbortControllerRef.current = null;
+      }
     }
   };
 
@@ -1326,8 +1454,24 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                       onClick={() => {
                         const newMode = textMode === 'translation' ? 'explanation' : 'translation';
                         setTextMode(newMode);
-                        setSourceText('');
+                        // Clear output when changing mode
                         setTargetText('');
+                        // Cancel any ongoing request
+                        if (textMode === 'translation' && translationAbortControllerRef.current) {
+                          translationAbortControllerRef.current.abort();
+                          translationAbortControllerRef.current = null;
+                        } else if (textMode === 'explanation' && explanationAbortControllerRef.current) {
+                          explanationAbortControllerRef.current.abort();
+                          explanationAbortControllerRef.current = null;
+                        }
+                        // Trigger new request with new mode if there's text
+                        if (sourceText.trim()) {
+                          if (newMode === 'explanation') {
+                            handleWordExplanation(sourceText, sourceLang, targetLang);
+                          } else {
+                            handleTranslate(sourceText, sourceLang, targetLang);
+                          }
+                        }
                       }}
                       className={`px-2 py-1 text-xs rounded-lg transition-all duration-200 ${
                         textMode === 'explanation'
@@ -1341,7 +1485,22 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                   )}
                   {inputMethod === 'image' && (
                     <button
-                      onClick={() => setUseVLMMode(!useVLMMode)}
+                      onClick={() => {
+                        const newMode = !useVLMMode;
+                        setUseVLMMode(newMode);
+                        // Clear output when changing mode
+                        setTargetText('');
+                        setTranslatedImage(null);
+                        // Cancel any ongoing request
+                        if (imageAbortControllerRef.current) {
+                          imageAbortControllerRef.current.abort();
+                          imageAbortControllerRef.current = null;
+                        }
+                        // Trigger new request with new mode if there's an image
+                        if (image) {
+                          processImage(image);
+                        }
+                      }}
                       className={`px-2 py-1 text-xs rounded-lg transition-all duration-200 ${
                         useVLMMode
                           ? 'bg-indigo-500 text-white'

@@ -89,13 +89,15 @@ const isHunyuanMT = (modelName: string): boolean => {
  * @param sourceLang - Source language code
  * @param targetLang - Target language code
  * @param settings - AI settings containing API key, endpoint, and model
+ * @param abortSignal - Optional AbortSignal to cancel the request
  * @returns Translated text
  */
 export async function translateText(
   text: string,
   sourceLang: LanguageCode,
   targetLang: LanguageCode,
-  settings: AISettings
+  settings: AISettings,
+  abortSignal?: AbortSignal
 ): Promise<string> {
   // If source and target are the same, return original text
   if (sourceLang === targetLang) {
@@ -133,6 +135,7 @@ export async function translateText(
       const result = await generateText({
         model: client(modelName),
         prompt: prompt,
+        abortSignal,
       });
 
       return result.text;
@@ -154,6 +157,7 @@ Instructions:
 5. Return only the translation in the JSON format specified
 
 Respond with the translation in JSON format.`,
+      abortSignal,
     });
 
     return result.object.translatedText;
