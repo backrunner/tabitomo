@@ -61,7 +61,7 @@ type TextMode = 'translation' | 'explanation';
 
 interface TranslationToolProps {
   settings: AISettings;
-  onOpenSettings: () => void;
+  onOpenSettings: (initialTab?: 'general' | 'translation' | 'speech' | 'image') => void;
 }
 
 interface CachedTranslation {
@@ -141,6 +141,15 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       } else {
         return !!(settings.imageOCR.apiKey && settings.imageOCR.endpoint);
       }
+    }
+  };
+
+  // Check if OCR is configured
+  const isOCRConfigured = () => {
+    if (settings.imageOCR.useGeneralAI) {
+      return isGeneralAIConfigured();
+    } else {
+      return !!(settings.imageOCR.apiKey && settings.imageOCR.endpoint);
     }
   };
 
@@ -348,6 +357,14 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
         variant: "destructive",
         title: "General AI Service Required",
         description: "Please configure the General AI service in Settings to use the Explanation feature.",
+        action: (
+          <button
+            onClick={() => onOpenSettings('general')}
+            className="px-3 py-1.5 bg-white text-indigo-600 text-xs rounded-lg hover:bg-indigo-50"
+          >
+            Open Settings
+          </button>
+        ),
       });
       return;
     }
@@ -429,6 +446,14 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
         variant: "destructive",
         title: "General AI Service Required",
         description: "Please configure the General AI service in Settings to use the Q&A feature.",
+        action: (
+          <button
+            onClick={() => onOpenSettings('general')}
+            className="px-3 py-1.5 bg-white text-indigo-600 text-xs rounded-lg hover:bg-indigo-50"
+          >
+            Open Settings
+          </button>
+        ),
       });
       return;
     }
@@ -753,7 +778,15 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
           toast({
             variant: "destructive",
             title: "VLM Service Required",
-            description: "Please configure VLM service in Settings (General AI, OCR, or Custom VLM) to use text-only translation mode.",
+            description: "Please configure VLM service in Settings (General AI, OCR, or Custom VLM).",
+            action: (
+              <button
+                onClick={() => onOpenSettings('general')}
+                className="px-3 py-1.5 bg-white text-indigo-600 text-xs rounded-lg hover:bg-indigo-50"
+              >
+                Open Settings
+              </button>
+            ),
           });
           return;
         }
@@ -1271,7 +1304,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
           <h1 className="text-lg font-bold">tabitomo</h1>
         </div>
         <button
-          onClick={onOpenSettings}
+          onClick={() => onOpenSettings()}
           className="p-2 text-white/80 hover:text-white hover:bg-indigo-600 rounded-lg transition-all duration-200 btn-pop"
           title="Settings"
         >
@@ -1365,6 +1398,23 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                         <X className="h-3 w-3" />
                       </button>
                     )}
+                  </div>
+                ) : !isOCRConfigured() && !useVLMMode ? (
+                  // Show settings guidance when OCR is not configured
+                  <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-yellow-50 dark:bg-yellow-900/20">
+                    <Settings className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mb-2" />
+                    <p className="text-yellow-800 dark:text-yellow-200 text-center text-xs font-medium mb-2">
+                      OCR Service Not Configured
+                    </p>
+                    <p className="text-yellow-700 dark:text-yellow-300 text-center text-xs mb-2">
+                      Configure OCR service in Settings to use image translation
+                    </p>
+                    <button
+                      onClick={() => onOpenSettings('image')}
+                      className="px-3 py-1.5 bg-indigo-500 text-white text-xs rounded-lg btn-pop hover:bg-indigo-600"
+                    >
+                      Open Settings
+                    </button>
                   </div>
                 ) : (
                   <div {...getRootProps()} className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-3">
@@ -1506,9 +1556,9 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                           ? 'bg-indigo-500 text-white'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                       }`}
-                      title={useVLMMode ? 'Switch to OCR mode' : 'Switch to text-only mode'}
+                      title={useVLMMode ? 'Switch to OCR mode' : 'Switch to VLM mode'}
                     >
-                      {useVLMMode ? 'Text Only' : 'OCR'}
+                      {useVLMMode ? 'VLM' : 'OCR'}
                     </button>
                   )}
                   {targetText && (

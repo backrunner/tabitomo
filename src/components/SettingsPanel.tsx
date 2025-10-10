@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Save, Settings as SettingsIcon, Sparkles, Mic, Image as ImageIcon, ArrowLeftRight, Languages, Download, CheckCircle } from 'lucide-react';
-import { AISettings, saveSettings, loadSettings, DEFAULT_SETTINGS, OPENAI_ENDPOINT, DASHSCOPE_ENDPOINT } from '../utils/config/settings';
+import { AISettings, saveSettings, loadSettings, DEFAULT_SETTINGS, DASHSCOPE_ENDPOINT } from '../utils/config/settings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
 import { ImportExportDialog } from './ImportExportDialog';
 import { Switch } from './ui/switch';
@@ -25,10 +25,10 @@ interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (settings: AISettings) => void;
-  isInitialSetup?: boolean;
+  initialTab?: 'general' | 'translation' | 'speech' | 'image';
 }
 
-export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave, isInitialSetup = false }) => {
+export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave, initialTab = 'general' }) => {
   const [settings, setSettings] = useState<AISettings>(() => {
     const loaded = loadSettings() || DEFAULT_SETTINGS;
     // Ensure generalAI exists for backward compatibility
@@ -42,6 +42,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
   });
   const [isSaving, setIsSaving] = useState(false);
   const [showImportExport, setShowImportExport] = useState(false);
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   // Local Whisper model download state
   const [isDownloadingModel, setIsDownloadingModel] = useState(false);
@@ -54,6 +55,22 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
   React.useEffect(() => {
     localWhisperService.initialize();
   }, []);
+
+  // Reload settings when dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      const loaded = loadSettings() || DEFAULT_SETTINGS;
+      // Ensure generalAI exists for backward compatibility
+      if (!loaded.generalAI) {
+        loaded.generalAI = DEFAULT_SETTINGS.generalAI;
+      }
+      if (!loaded.vlm) {
+        loaded.vlm = DEFAULT_SETTINGS.vlm;
+      }
+      setSettings(loaded);
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   // Check if current model is downloaded whenever the model changes
   React.useEffect(() => {
@@ -163,61 +180,50 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-500 rounded-xl cute-shadow">
-              {isInitialSetup ? <Sparkles className="w-5 h-5 text-white" /> : <SettingsIcon className="w-5 h-5 text-white" />}
+              <SettingsIcon className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h2 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white">
-                {isInitialSetup ? 'Welcome to tabitomo!' : 'Settings'}
-              </h2>
-              {isInitialSetup && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Configure your AI provider to get started
-                </p>
-              )}
-            </div>
+            <h2 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white">
+              Settings
+            </h2>
           </div>
-          {!isInitialSetup && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowImportExport(true)}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors btn-pop"
-                title="Import/Export Settings"
-              >
-                <ArrowLeftRight className="w-5 h-5" />
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors btn-pop"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowImportExport(true)}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors btn-pop"
+              title="Import/Export Settings"
+            >
+              <ArrowLeftRight className="w-5 h-5" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors btn-pop"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 max-h-[60vh] overflow-y-auto">
-          <Tabs defaultValue="general">
-            {!isInitialSetup && (
-              <TabsList className="w-full grid grid-cols-4 mb-6">
-                <TabsTrigger value="general" className="flex flex-col items-center gap-1 px-2 py-2">
-                  <SettingsIcon className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">General</span>
-                </TabsTrigger>
-                <TabsTrigger value="translation" className="flex flex-col items-center gap-1 px-2 py-2">
-                  <Languages className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">Translate</span>
-                </TabsTrigger>
-                <TabsTrigger value="speech" className="flex flex-col items-center gap-1 px-2 py-2">
-                  <Mic className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">Speech</span>
-                </TabsTrigger>
-                <TabsTrigger value="image" className="flex flex-col items-center gap-1 px-2 py-2">
-                  <ImageIcon className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">Image</span>
-                </TabsTrigger>
-              </TabsList>
-            )}
+        <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'general' | 'translation' | 'speech' | 'image')}>
+            <TabsList className="w-full grid grid-cols-4 mb-6">
+              <TabsTrigger value="general" className="flex flex-col items-center gap-1 px-2 py-2">
+                <SettingsIcon className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">General</span>
+              </TabsTrigger>
+              <TabsTrigger value="translation" className="flex flex-col items-center gap-1 px-2 py-2">
+                <Languages className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Translate</span>
+              </TabsTrigger>
+              <TabsTrigger value="speech" className="flex flex-col items-center gap-1 px-2 py-2">
+                <Mic className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Speech</span>
+              </TabsTrigger>
+              <TabsTrigger value="image" className="flex flex-col items-center gap-1 px-2 py-2">
+                <ImageIcon className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">Image</span>
+              </TabsTrigger>
+            </TabsList>
 
             {/* General AI Service Tab */}
             <TabsContent value="general">
@@ -286,45 +292,20 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
             {/* Translation Tab */}
             <TabsContent value="translation">
               <div className="space-y-4">
-                {/* Provider Selection */}
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Provider
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setSettings({ ...settings, provider: 'openai', endpoint: OPENAI_ENDPOINT })}
-                      className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.provider === 'openai' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
-                    >
-                      <div className="text-sm font-bold text-gray-800 dark:text-white">OpenAI</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Official API</div>
-                    </button>
-                    <button
-                      onClick={() => setSettings({ ...settings, provider: 'custom', endpoint: '' })}
-                      className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.provider === 'custom' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
-                    >
-                      <div className="text-sm font-bold text-gray-800 dark:text-white">Custom</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Your endpoint</div>
-                    </button>
-                  </div>
-                </div>
-
                 {/* Endpoint URL */}
-                {settings.provider === 'custom' && (
-                  <div className="space-y-1.5">
-                    <label htmlFor="endpoint" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      API Endpoint
-                    </label>
-                    <input
-                      id="endpoint"
-                      type="text"
-                      value={settings.endpoint}
-                      onChange={(e) => setSettings({ ...settings, endpoint: e.target.value })}
-                      placeholder="https://api.example.com/v1"
-                      className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
-                    />
-                  </div>
-                )}
+                <div className="space-y-1.5">
+                  <label htmlFor="endpoint" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    API Endpoint
+                  </label>
+                  <input
+                    id="endpoint"
+                    type="text"
+                    value={settings.endpoint}
+                    onChange={(e) => setSettings({ ...settings, endpoint: e.target.value })}
+                    placeholder="https://api.example.com/v1"
+                    className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
+                  />
+                </div>
 
                 {/* Model Name */}
                 <div className="space-y-1.5">
@@ -832,25 +813,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
 
         {/* Footer */}
         <div className="flex items-center justify-end p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-b-3xl">
-          {!isInitialSetup ? (
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-indigo-500 text-white text-sm sm:text-base font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              <Save className="w-4 h-4" />
-              {isSaving ? 'Saving...' : 'Save Settings'}
-            </button>
-          ) : (
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3.5 bg-indigo-500 text-white text-sm sm:text-base font-bold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              {isSaving ? 'Starting...' : 'Start Translating'}
-              <Sparkles className="w-4 h-4" />
-            </button>
-          )}
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-indigo-500 text-white text-sm sm:text-base font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          >
+            <Save className="w-4 h-4" />
+            {isSaving ? 'Saving...' : 'Save Settings'}
+          </button>
         </div>
       </div>
 

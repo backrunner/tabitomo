@@ -115,12 +115,24 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
     setIsScanning(true);
     setError(null);
 
+    // Wait for the DOM element to be rendered
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     try {
       const scanner = new Html5Qrcode('qr-reader');
       qrScannerRef.current = scanner;
 
+      // Get available cameras
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || cameras.length === 0) {
+        throw new Error('No cameras found on this device');
+      }
+
+      // Try to use the back camera if available, otherwise use the first camera
+      const cameraId = cameras.length > 1 ? cameras[1].id : cameras[0].id;
+
       await scanner.start(
-        { facingMode: 'environment' },
+        cameraId,
         { fps: 10, qrbox: { width: 250, height: 250 } },
         async (decodedText) => {
           try {
@@ -148,7 +160,22 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
         }
       );
     } catch (err) {
-      setError(`Scanner failed: ${err instanceof Error ? err.message : 'Camera access denied'}`);
+      console.error('QR Scanner error:', err);
+      let errorMessage = 'Scanner failed: ';
+      if (err instanceof Error) {
+        if (err.message.includes('NotAllowedError') || err.message.includes('Permission')) {
+          errorMessage += 'Camera permission denied. Please allow camera access in your browser settings.';
+        } else if (err.message.includes('NotFoundError') || err.message.includes('No cameras')) {
+          errorMessage += 'No camera found on this device.';
+        } else if (err.message.includes('NotReadableError')) {
+          errorMessage += 'Camera is already in use by another application.';
+        } else {
+          errorMessage += err.message;
+        }
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
+      setError(errorMessage);
       setIsScanning(false);
     }
   };
@@ -179,15 +206,28 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div
+        className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl cute-shadow">
+            <div className="p-2 bg-indigo-500 rounded-xl cute-shadow">
               <ArrowLeftRight className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+            <h2 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white">
               Import/Export Settings
             </h2>
           </div>
@@ -213,7 +253,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setMode('export-file')}
-                    className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 min-h-[100px] flex flex-col items-center justify-center"
+                    className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 min-h-[100px] flex flex-col items-center justify-center"
                   >
                     <FileText className="w-6 h-6 mb-2 text-indigo-500" />
                     <div className="text-sm font-bold text-gray-800 dark:text-white">File</div>
@@ -221,7 +261,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                   </button>
                   <button
                     onClick={() => setMode('export-qr')}
-                    className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 min-h-[100px] flex flex-col items-center justify-center"
+                    className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 min-h-[100px] flex flex-col items-center justify-center"
                   >
                     <QrCode className="w-6 h-6 mb-2 text-indigo-500" />
                     <div className="text-sm font-bold text-gray-800 dark:text-white">QR Code</div>
@@ -236,7 +276,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setMode('import-file')}
-                    className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 min-h-[100px] flex flex-col items-center justify-center"
+                    className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 min-h-[100px] flex flex-col items-center justify-center"
                   >
                     <Upload className="w-6 h-6 mb-2 text-purple-500" />
                     <div className="text-sm font-bold text-gray-800 dark:text-white">File</div>
@@ -244,7 +284,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                   </button>
                   <button
                     onClick={() => setMode('import-qr')}
-                    className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 min-h-[100px] flex flex-col items-center justify-center"
+                    className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 min-h-[100px] flex flex-col items-center justify-center"
                   >
                     <Scan className="w-6 h-6 mb-2 text-purple-500" />
                     <div className="text-sm font-bold text-gray-800 dark:text-white">Scan QR</div>
@@ -298,7 +338,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                 <button
                   onClick={handleExportFile}
                   disabled={isProcessing || !password}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
                 >
                   <HardDriveUpload className="w-4 h-4" />
                   {isProcessing ? 'Exporting...' : 'Export to File'}
@@ -312,7 +352,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                     <button
                       onClick={handleExportQR}
                       disabled={isProcessing || !password}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
                     >
                       <QrCode className="w-4 h-4" />
                       {isProcessing ? 'Generating...' : 'Generate QR Code'}
@@ -343,7 +383,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isProcessing || !password}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
                   >
                     <Upload className="w-4 h-4" />
                     {isProcessing ? 'Importing...' : 'Select File'}
@@ -358,7 +398,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                     <button
                       onClick={startQRScanner}
                       disabled={isProcessing || !password}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
                     >
                       <Scan className="w-4 h-4" />
                       Start Scanning

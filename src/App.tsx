@@ -7,18 +7,21 @@ import { usePWAUpdate } from './hooks/usePWAUpdate';
 
 // Lazy load SettingsPanel - only loaded when user opens settings
 const SettingsPanel = lazy(() => import('./components/SettingsPanel').then(module => ({ default: module.SettingsPanel })));
+// Lazy load WelcomeWizard - only loaded on first launch
+const WelcomeWizard = lazy(() => import('./components/WelcomeWizard').then(module => ({ default: module.WelcomeWizard })));
 
 export function App() {
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'general' | 'translation' | 'speech' | 'image'>('general');
   const [currentSettings, setCurrentSettings] = useState<AISettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialSetup, setIsInitialSetup] = useState(false);
+  const [showWelcomeWizard, setShowWelcomeWizard] = useState(false);
 
   // PWA update management
   const { showUpdatePrompt, handleUpdate, handleDismiss } = usePWAUpdate();
 
   useEffect(() => {
-    // Load settings or use defaults
+    // Load settings or show welcome wizard
     const loaded = loadSettings();
     if (loaded) {
       // Ensure generalAI and vlm exist for backward compatibility
@@ -30,26 +33,38 @@ export function App() {
       }
       setCurrentSettings(loaded);
     } else {
-      // First launch: use default settings (no forced setup)
-      setCurrentSettings(DEFAULT_SETTINGS);
-      // Save defaults to localStorage
-      saveSettings(DEFAULT_SETTINGS);
+      // First launch: show welcome wizard
+      setShowWelcomeWizard(true);
     }
     setIsLoading(false);
   }, []);
 
   const handleSettingsSave = (settings: AISettings) => {
     setCurrentSettings(settings);
-    setIsInitialSetup(false);
     setShowSettings(false);
   };
 
-  const handleSettingsClose = () => {
-    // Don't allow closing if initial setup not completed
-    if (isInitialSetup && !currentSettings) {
-      return;
+  const handleWelcomeComplete = (settings: AISettings) => {
+    saveSettings(settings);
+    setCurrentSettings(settings);
+    setShowWelcomeWizard(false);
+  };
+
+  const handleWelcomeSkip = () => {
+    // User skipped without configuring - set default settings but show wizard again on next launch
+    if (!currentSettings) {
+      setCurrentSettings(DEFAULT_SETTINGS);
     }
+    setShowWelcomeWizard(false);
+  };
+
+  const handleSettingsClose = () => {
     setShowSettings(false);
+  };
+
+  const handleOpenSettings = (initialTab?: 'general' | 'translation' | 'speech' | 'image') => {
+    setSettingsInitialTab(initialTab || 'general');
+    setShowSettings(true);
   };
 
   if (isLoading) {
@@ -69,9 +84,18 @@ export function App() {
       {currentSettings && (
         <TranslationTool
           settings={currentSettings}
-          onOpenSettings={() => setShowSettings(true)}
+          onOpenSettings={handleOpenSettings}
         />
       )}
+
+      {/* Welcome Wizard - Lazy Loaded */}
+      <Suspense fallback={null}>
+        <WelcomeWizard
+          isOpen={showWelcomeWizard}
+          onComplete={handleWelcomeComplete}
+          onSkip={handleWelcomeSkip}
+        />
+      </Suspense>
 
       {/* Settings Panel - Lazy Loaded */}
       <Suspense fallback={null}>
@@ -79,7 +103,7 @@ export function App() {
           isOpen={showSettings}
           onClose={handleSettingsClose}
           onSave={handleSettingsSave}
-          isInitialSetup={isInitialSetup}
+          initialTab={settingsInitialTab}
         />
       </Suspense>
 

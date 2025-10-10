@@ -1,22 +1,27 @@
 import React, { useCallback, useState, createContext, useContext } from 'react';
 interface TabsProps {
-  defaultValue: string;
+  defaultValue?: string;
+  value?: string;
   children: React.ReactNode;
   onValueChange?: (value: string) => void;
 }
+
 interface TabsListProps {
   children: React.ReactNode;
   className?: string;
 }
+
 interface TabsTriggerProps {
   value: string;
   children: React.ReactNode;
   className?: string;
 }
+
 interface TabsContentProps {
   value: string;
   children: React.ReactNode;
 }
+
 const TabsContext = createContext<{
   value: string;
   onValueChange: (value: string) => void;
@@ -24,16 +29,25 @@ const TabsContext = createContext<{
   value: '',
   onValueChange: () => {}
 });
+
 export function Tabs({
   defaultValue,
+  value: controlledValue,
   children,
   onValueChange
 }: TabsProps) {
-  const [value, setValue] = useState(defaultValue);
+  const [internalValue, setInternalValue] = useState(defaultValue || controlledValue || '');
+
+  // Use controlled value if provided, otherwise use internal state
+  const value = controlledValue !== undefined ? controlledValue : internalValue;
+
   const handleValueChange = useCallback((newValue: string) => {
-    setValue(newValue);
+    if (controlledValue === undefined) {
+      setInternalValue(newValue);
+    }
     onValueChange?.(newValue);
-  }, [onValueChange]);
+  }, [controlledValue, onValueChange]);
+
   return <TabsContext.Provider value={{
     value,
     onValueChange: handleValueChange
