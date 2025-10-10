@@ -3,7 +3,7 @@
  * Runs entirely in the browser using WebAssembly
  */
 
-import { downloadWhisperModel, transcribe, WhisperWebModel, resampleTo16Khz, WhisperWebLanguage } from '@remotion/whisper-web';
+import { downloadWhisperModel, transcribe, WhisperWebModel, resampleTo16Khz, WhisperWebLanguage, getLoadedModels } from '@remotion/whisper-web';
 
 export type WhisperModelSize = Extract<WhisperWebModel, 'tiny' | 'base' | 'small'>;
 
@@ -69,7 +69,33 @@ class LocalWhisperService {
   }
 
   /**
-   * Check if a model is downloaded
+   * Check if a model is downloaded (checks both in-memory cache and browser storage)
+   */
+  async isModelDownloadedAsync(modelSize: WhisperModelSize): Promise<boolean> {
+    // First check in-memory cache
+    if (this.downloadedModels.has(modelSize)) {
+      return true;
+    }
+
+    // Then check browser storage using getLoadedModels
+    try {
+      const loadedModels = await getLoadedModels();
+      const isLoaded = loadedModels.includes(modelSize);
+
+      // Sync in-memory cache with browser storage
+      if (isLoaded) {
+        this.downloadedModels.add(modelSize);
+      }
+
+      return isLoaded;
+    } catch (error) {
+      console.error('[Whisper] Failed to check loaded models:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if a model is downloaded (synchronous version, checks only in-memory cache)
    */
   isModelDownloaded(modelSize: WhisperModelSize): boolean {
     return this.downloadedModels.has(modelSize);
@@ -136,6 +162,23 @@ class LocalWhisperService {
   clearCache(): void {
     this.downloadedModels.clear();
     console.log('[Whisper] Model cache cleared');
+  }
+
+  /**
+   * Initialize service by syncing with browser storage
+   */
+  async initialize(): Promise<void> {
+    try {
+      const loadedModels = await getLoadedModels();
+      loadedModels.forEach((model) => {
+        if (model === 'tiny' || model === 'base' || model === 'small') {
+          this.downloadedModels.add(model);
+        }
+      });
+      console.log('[Whisper] Initialized with models:', Array.from(this.downloadedModels));
+    } catch (error) {
+      console.error('[Whisper] Failed to initialize:', error);
+    }
   }
 
   /**

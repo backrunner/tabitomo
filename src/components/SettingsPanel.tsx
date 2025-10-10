@@ -48,6 +48,25 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
   const [downloadConfirmInfo, setDownloadConfirmInfo] = useState({ networkType: '', modelSize: '', size: '' });
+  const [currentModelDownloaded, setCurrentModelDownloaded] = useState(false);
+
+  // Initialize local whisper service on mount
+  React.useEffect(() => {
+    localWhisperService.initialize();
+  }, []);
+
+  // Check if current model is downloaded whenever the model changes
+  React.useEffect(() => {
+    const checkModelDownloaded = async () => {
+      const modelSize = settings.speechRecognition.whisperModel || 'base';
+      const isDownloaded = await localWhisperService.isModelDownloadedAsync(modelSize);
+      setCurrentModelDownloaded(isDownloaded);
+    };
+
+    if (settings.speechRecognition.provider === 'local-whisper') {
+      checkModelDownloaded();
+    }
+  }, [settings.speechRecognition.whisperModel, settings.speechRecognition.provider, settings.speechRecognition.whisperModelDownloaded]);
 
   const handleSave = () => {
     setIsSaving(true);
@@ -114,6 +133,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
       };
       setSettings(updatedSettings);
       saveSettings(updatedSettings);
+      setCurrentModelDownloaded(true);
 
       setDownloadProgress(100);
     } catch (error) {
@@ -475,14 +495,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                             return (
                               <button
                                 key={size}
-                                onClick={() => setSettings({
-                                  ...settings,
-                                  speechRecognition: {
-                                    ...settings.speechRecognition,
-                                    whisperModel: size,
-                                    whisperModelDownloaded: false // Reset download status when changing model
-                                  }
-                                })}
+                                onClick={async () => {
+                                  // Check if the model is already downloaded
+                                  const isDownloaded = await localWhisperService.isModelDownloadedAsync(size);
+                                  setSettings({
+                                    ...settings,
+                                    speechRecognition: {
+                                      ...settings.speechRecognition,
+                                      whisperModel: size,
+                                      whisperModelDownloaded: isDownloaded
+                                    }
+                                  });
+                                }}
                                 className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.speechRecognition.whisperModel === size ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                               >
                                 <div className="text-sm font-bold text-gray-800 dark:text-white capitalize">{size}</div>
@@ -498,7 +522,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
 
                       {/* Model Download Button */}
                       <div className="space-y-1.5">
-                        {localWhisperService.isModelDownloaded(settings.speechRecognition.whisperModel || 'base') || settings.speechRecognition.whisperModelDownloaded ? (
+                        {currentModelDownloaded ? (
                           <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800">
                             <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                             <div className="flex-1">
