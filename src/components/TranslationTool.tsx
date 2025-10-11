@@ -609,7 +609,21 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
           console.log('[Realtime] Realtime transcription started');
         } catch (err) {
           console.error('[Realtime] Failed to start realtime transcription:', err);
-          setError('Failed to access microphone for realtime transcription');
+
+          // Check if it's a permission error
+          if (err instanceof Error &&
+              (err.name === 'NotAllowedError' ||
+               err.name === 'PermissionDeniedError' ||
+               err.message.includes('Permission denied') ||
+               err.message.includes('permission'))) {
+            toast({
+              variant: "destructive",
+              title: "Microphone Permission Denied",
+              description: "Please allow microphone access in your browser settings to use voice input.",
+            });
+          } else {
+            setError('Failed to access microphone for realtime transcription');
+          }
           setIsRecording(false);
         }
       } else {
@@ -649,7 +663,21 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
           mediaRecorder.start();
         } catch (err) {
           console.error('Failed to start recording:', err);
-          setError('Failed to access microphone');
+
+          // Check if it's a permission error
+          if (err instanceof Error &&
+              (err.name === 'NotAllowedError' ||
+               err.name === 'PermissionDeniedError' ||
+               err.message.includes('Permission denied') ||
+               err.message.includes('permission'))) {
+            toast({
+              variant: "destructive",
+              title: "Microphone Permission Denied",
+              description: "Please allow microphone access in your browser settings to use voice input.",
+            });
+          } else {
+            setError('Failed to access microphone');
+          }
           setIsRecording(false);
         }
       }
@@ -675,7 +703,17 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
 
         recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
           console.error('Speech recognition error:', event.error);
-          setError(`Voice recognition error: ${event.error}`);
+
+          // Check if it's a permission error
+          if (event.error === 'not-allowed' || event.error === 'audio-capture') {
+            toast({
+              variant: "destructive",
+              title: "Microphone Permission Denied",
+              description: "Please allow microphone access in your browser settings to use voice input.",
+            });
+          } else {
+            setError(`Voice recognition error: ${event.error}`);
+          }
           setIsRecording(false);
         };
 
