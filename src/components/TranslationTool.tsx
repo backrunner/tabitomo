@@ -1469,21 +1469,23 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                     </button>
                   </div>
                 ) : (
-                  <div {...getRootProps()} className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-3">
+                  <div {...getRootProps()} className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-2">
                     <input {...getInputProps()} />
-                    <ImageIcon className="h-8 w-8 text-indigo-300 dark:text-indigo-400 mb-2" />
-                    <p className="text-gray-500 dark:text-gray-400 text-center text-sm mb-2">
-                      Tap to upload an image
+                    <div className="mb-2 p-2 bg-indigo-100/50 dark:bg-indigo-900/30 rounded-xl" style={{ filter: 'drop-shadow(0 2px 4px rgba(99, 102, 241, 0.15))' }}>
+                      <ImageIcon className="h-6 w-6 text-indigo-500 dark:text-indigo-400" />
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 text-center text-xs font-medium mb-1.5">
+                      Upload an Image
                     </p>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsCameraOpen(true);
                       }}
-                      className="mt-2 px-3 py-1.5 bg-indigo-500 text-white text-xs rounded-lg btn-pop"
+                      className="px-3 py-1 bg-indigo-500 text-white text-xs font-medium rounded-lg cute-shadow hover:bg-indigo-400 transition-colors duration-200 flex items-center space-x-1.5"
                     >
-                      <Camera className="h-3 w-3 inline mr-1" />
-                      Use Camera
+                      <Camera className="h-3 w-3" />
+                      <span>Camera</span>
                     </button>
                   </div>
                 )}
@@ -1517,7 +1519,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                         ? 'Enter text to explain (word/sentence/grammar)...'
                         : `Type in ${languageOptions.find(l => l.value === sourceLang)?.label}...`
                       }
-                      className="w-full min-h-[8rem] max-h-[12.5rem] p-3 pr-12 rounded-2xl border-2 border-indigo-100 dark:border-gray-600 focus:ring-2 focus:ring-indigo-300 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 resize-none static-shadow overflow-y-auto"
+                      className="w-full min-h-[8rem] max-h-[12.5rem] p-3 pr-12 rounded-2xl border-2 border-indigo-100 dark:border-gray-600 focus:outline-none focus:border-indigo-300 dark:focus:border-indigo-400 dark:bg-gray-700 dark:text-gray-100 resize-none cute-shadow overflow-y-auto custom-scrollbar"
                       style={{ height: 'auto' }}
                       readOnly={isRecording}
                     />
