@@ -1,15 +1,15 @@
 /**
  * Local Whisper transcription service using @remotion/whisper-web
  * Runs entirely in the browser using WebAssembly
+ *
+ * Note: Whisper library is dynamically imported to reduce initial bundle size
  */
 
-import { downloadWhisperModel, transcribe, WhisperWebModel, resampleTo16Khz, WhisperWebLanguage, getLoadedModels } from '@remotion/whisper-web';
-
-export type WhisperModelSize = Extract<WhisperWebModel, 'tiny' | 'base' | 'small'>;
+export type WhisperModelSize = 'tiny' | 'base' | 'small';
 
 export interface WhisperTranscriptionOptions {
   model?: WhisperModelSize;
-  language?: WhisperWebLanguage;
+  language?: string; // WhisperWebLanguage from @remotion/whisper-web
 }
 
 interface ModelDownloadProgress {
@@ -45,6 +45,9 @@ class LocalWhisperService {
     try {
       console.log(`[Whisper] Starting download of ${modelSize} model...`);
 
+      // Dynamically import whisper-web only when needed
+      const { downloadWhisperModel } = await import('@remotion/whisper-web');
+
       await downloadWhisperModel({
         model: modelSize,
         onProgress: (progress) => {
@@ -79,6 +82,8 @@ class LocalWhisperService {
 
     // Then check browser storage using getLoadedModels
     try {
+      // Dynamically import whisper-web only when needed
+      const { getLoadedModels } = await import('@remotion/whisper-web');
       const loadedModels = await getLoadedModels();
       const isLoaded = loadedModels.includes(modelSize);
 
@@ -127,6 +132,9 @@ class LocalWhisperService {
     try {
       console.log(`[Whisper] Transcribing audio with ${modelSize} model...`);
 
+      // Dynamically import whisper-web only when needed
+      const { resampleTo16Khz, transcribe } = await import('@remotion/whisper-web');
+
       // Resample audio to 16kHz Float32Array for Whisper
       const channelWaveform = await resampleTo16Khz({
         file: audioBlob,
@@ -136,7 +144,7 @@ class LocalWhisperService {
       const result = await transcribe({
         model: modelSize,
         channelWaveform,
-        language: options.language,
+        language: options.language as any,
       });
 
       // Concatenate all transcription items into a single string
@@ -169,6 +177,8 @@ class LocalWhisperService {
    */
   async initialize(): Promise<void> {
     try {
+      // Dynamically import whisper-web only when needed
+      const { getLoadedModels } = await import('@remotion/whisper-web');
       const loadedModels = await getLoadedModels();
       loadedModels.forEach((model) => {
         if (model === 'tiny' || model === 'base' || model === 'small') {

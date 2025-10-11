@@ -12,7 +12,6 @@ import { ImageLightbox } from './ImageLightbox';
 
 // Lazy load CameraPanel - only loaded when user opens camera
 const CameraPanel = lazy(() => import('./CameraPanel').then(module => ({ default: module.CameraPanel })));
-import { marked } from 'marked';
 import { useToast } from './ui/use-toast';
 import {
   Select,
@@ -102,6 +101,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [useVLMMode, setUseVLMMode] = useState(false);
+  const [parsedMarkdown, setParsedMarkdown] = useState<string>('');
   // Animation refs
   const targetInputRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -256,6 +256,18 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       setFuriganaHtml(null);
     }
   }, [targetText, targetLang]);
+
+  // Parse markdown when targetText changes for VLM/QA/Explanation modes
+  useEffect(() => {
+    if (targetText && (useVLMMode || inputMethod === 'qa' || textMode === 'explanation')) {
+      // Dynamically import marked only when needed
+      import('marked').then(({ marked }) => {
+        setParsedMarkdown(marked.parse(targetText) as string);
+      });
+    } else {
+      setParsedMarkdown('');
+    }
+  }, [targetText, useVLMMode, inputMethod, textMode]);
 
   // Handle language swap
   const handleSwapLanguages = () => {
@@ -1412,7 +1424,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       <div className="p-4">
         {/* Source Input */}
         <div className="relative">
-            {inputMethod === 'image' ? <div className="w-full h-32 rounded-2xl border-2 border-indigo-100 dark:border-gray-600 bg-white dark:bg-gray-700 overflow-hidden static-shadow">
+            {inputMethod === 'image' ? <div className="w-full h-32 rounded-2xl border border-indigo-100 dark:border-gray-600 bg-white dark:bg-gray-700 overflow-hidden static-shadow">
                 {image ? (
                   <div className="relative w-full h-full">
                     <img
@@ -1492,7 +1504,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
               </div> : <div className="relative">
                 {/* Check if Q/A requires General AI and show warning if not configured */}
                 {(inputMethod === 'qa' || (inputMethod === 'text' && textMode === 'explanation')) && !isGeneralAIConfigured() ? (
-                  <div className="w-full min-h-[8rem] rounded-2xl border-2 border-indigo-100 dark:border-gray-600 bg-indigo-500/10 dark:bg-indigo-500/20 overflow-hidden static-shadow flex flex-col items-center justify-center p-4">
+                  <div className="w-full min-h-[8rem] rounded-2xl border border-indigo-100 dark:border-gray-600 bg-indigo-500/10 dark:bg-indigo-500/20 overflow-hidden static-shadow flex flex-col items-center justify-center p-4">
                     <Settings className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mb-2" />
                     <p className="text-indigo-800 dark:text-indigo-200 text-center text-xs font-medium mb-3">
                       {inputMethod === 'qa' ? 'Q&A Service Not Configured' : 'Explanation Service Not Configured'}
@@ -1653,8 +1665,8 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                   )}
                 </div>
               </div>
-              <div className="mt-2 p-3 min-h-[8rem] bg-indigo-50 dark:bg-gray-700 rounded-2xl cute-shadow flex items-center justify-center" ref={targetInputRef}>
-                {isTranslating && !targetText ? <div className="flex items-center justify-center py-4">
+              <div className="mt-2 p-3 min-h-[8rem] max-h-[24rem] bg-indigo-50 dark:bg-gray-700 rounded-2xl cute-shadow overflow-y-auto custom-scrollbar" ref={targetInputRef}>
+                {isTranslating && !targetText ? <div className="flex items-center justify-center py-4 min-h-[7rem]">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-indigo-500 dark:bg-indigo-400 rounded-full animate-bounce" style={{
                   animationDelay: '0ms'
@@ -1666,7 +1678,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                   animationDelay: '300ms'
                 }}></div>
                     </div>
-                  </div> : error ? <p className="text-red-500 dark:text-red-400 text-center py-6 text-sm">
+                  </div> : error ? <p className="text-red-500 dark:text-red-400 text-center py-6 text-sm min-h-[7rem] flex items-center justify-center">
                     {error}
                   </p> : translatedImage && !useVLMMode ? (
                     <div className="w-full">
@@ -1691,10 +1703,10 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                         </div>
                       )}
                       {useVLMMode || inputMethod === 'qa' || textMode === 'explanation' ? (
-                        // VLM mode / Q&A / Explanation: Render as markdown using marked
+                        // VLM mode / Q&A / Explanation: Render as markdown
                         <div
                           className="text-gray-800 dark:text-gray-200 w-full leading-relaxed prose dark:prose-invert prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: marked.parse(targetText) as string }}
+                          dangerouslySetInnerHTML={{ __html: parsedMarkdown }}
                         />
                       ) : furiganaHtml ? (
                       <div
@@ -1707,7 +1719,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                         </p>
                       )}
                     </div>
-                  ) : <p className="text-gray-400 dark:text-gray-500 text-center py-6">
+                  ) : <p className="text-gray-400 dark:text-gray-500 text-center py-6 min-h-[7rem] flex items-center justify-center">
                     {inputMethod === 'qa'
                       ? 'Ask a question and get a quick answer'
                       : textMode === 'explanation'

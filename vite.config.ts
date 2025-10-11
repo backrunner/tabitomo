@@ -122,20 +122,69 @@ export default defineConfig({
     copyPublicDir: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Separate vendor chunks for better caching
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': [
-            'lucide-react',
-            '@radix-ui/react-select',
-            '@radix-ui/react-switch',
-            '@radix-ui/react-toast',
-            'react-dropzone'
-          ],
-          'vendor-ai': ['ai', '@ai-sdk/openai', '@ai-sdk/openai-compatible', 'openai'],
-          'vendor-japanese': ['kuroshiro', 'kuroshiro-analyzer-kuromoji', 'kuromoji'],
-          'vendor-markdown': ['marked', 'react-markdown'],
-          'vendor-misc': ['html5-qrcode', 'qrcode', 'clsx', 'tailwind-merge', 'zod'],
+        manualChunks: (id) => {
+          // Core React libraries
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/react-router-dom/')) {
+            return 'vendor-router';
+          }
+
+          // UI libraries
+          if (id.includes('lucide-react')) {
+            return 'vendor-icons';
+          }
+          if (id.includes('@radix-ui/')) {
+            return 'vendor-radix';
+          }
+          if (id.includes('react-dropzone')) {
+            return 'vendor-ui-misc';
+          }
+
+          // AI/ML libraries (heavy)
+          if (id.includes('node_modules/ai/') || id.includes('@ai-sdk/')) {
+            return 'vendor-ai';
+          }
+          if (id.includes('node_modules/openai/')) {
+            return 'vendor-openai';
+          }
+
+          // Japanese text processing (lazy loaded, but keep together when needed)
+          if (id.includes('kuroshiro') || id.includes('kuromoji')) {
+            return 'vendor-japanese';
+          }
+
+          // Markdown rendering (lazy loaded)
+          if (id.includes('marked') || id.includes('react-markdown')) {
+            return 'vendor-markdown';
+          }
+
+          // Image processing (lazy loaded)
+          if (id.includes('html5-qrcode') || id.includes('node_modules/qrcode/')) {
+            return 'vendor-qr';
+          }
+          if (id.includes('@jsquash/jpeg')) {
+            return 'vendor-image';
+          }
+
+          // Audio processing (lazy loaded)
+          if (id.includes('@remotion/whisper-web')) {
+            return 'vendor-whisper';
+          }
+
+          // Utilities
+          if (id.includes('clsx') || id.includes('tailwind-merge')) {
+            return 'vendor-css-utils';
+          }
+          if (id.includes('node_modules/zod/')) {
+            return 'vendor-zod';
+          }
+
+          // Keep other node_modules together as vendor
+          if (id.includes('node_modules/')) {
+            return 'vendor-misc';
+          }
         }
       }
     }

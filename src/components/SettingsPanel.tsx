@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { X, Save, Settings as SettingsIcon, Sparkles, Mic, Image as ImageIcon, ArrowLeftRight, Languages, Download, CheckCircle } from 'lucide-react';
 import { AISettings, saveSettings, loadSettings, DEFAULT_SETTINGS, DASHSCOPE_ENDPOINT } from '../utils/config/settings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
-import { ImportExportDialog } from './ImportExportDialog';
 import { Switch } from './ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ConfirmDialog } from './ConfirmDialog';
 import { localWhisperService, WhisperModelSize } from '../utils/audio/localWhisper';
 import { toast } from './ui/use-toast';
+
+// Lazy load ImportExportDialog - only loaded when user opens it
+const ImportExportDialog = lazy(() => import('./ImportExportDialog').then(module => ({ default: module.ImportExportDialog })));
 
 // Network Information API types (not fully standardized)
 interface NetworkInformation {
@@ -824,13 +826,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
         </div>
       </div>
 
-      {/* Import/Export Dialog */}
-      <ImportExportDialog
-        isOpen={showImportExport}
-        onClose={() => setShowImportExport(false)}
-        currentSettings={settings}
-        onImport={handleImport}
-      />
+      {/* Import/Export Dialog - Lazy Loaded */}
+      <Suspense fallback={null}>
+        <ImportExportDialog
+          isOpen={showImportExport}
+          onClose={() => setShowImportExport(false)}
+          currentSettings={settings}
+          onImport={handleImport}
+        />
+      </Suspense>
 
       {/* Download Confirmation Dialog */}
       <ConfirmDialog
