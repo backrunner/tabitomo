@@ -59,13 +59,13 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <div className="flex items-center gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-b-3xl">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 text-gray-700 dark:text-gray-300 font-semibold bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors btn-pop"
+            className="flex-1 px-4 py-2.5 text-gray-700 dark:text-gray-300 font-semibold bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-all duration-200 btn-pop"
           >
             {cancelText}
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg transition-all duration-200 btn-pop"
+            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl cute-shadow hover:from-indigo-400 hover:to-purple-400 transition-all duration-200 btn-pop"
           >
             {confirmText}
           </button>

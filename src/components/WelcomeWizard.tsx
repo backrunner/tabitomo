@@ -226,7 +226,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Your AI-powered travel companion</p>
             </div>
           </div>
-          <button onClick={onSkip} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors btn-pop" title="Skip for now">
+          <button onClick={onSkip} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-all duration-200 btn-pop" title="Skip for now">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -331,7 +331,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-gray-800 dark:text-white">Translation Service</h3>
-                    <button onClick={handleQuickFillSiliconFlow} className="px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors btn-pop">
+                    <button onClick={handleQuickFillSiliconFlow} className="px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all duration-200 btn-pop">
                       Recommended Settings
                     </button>
                   </div>
@@ -365,7 +365,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 </p>
               </div>
 
-              <button onClick={handleTranslationNext} disabled={configMode === 'general' ? !(settings.generalAI.apiKey && settings.generalAI.endpoint && settings.generalAI.modelName) : !(settings.apiKey && settings.endpoint && settings.modelName)} className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
+              <button onClick={handleTranslationNext} disabled={configMode === 'general' ? !(settings.generalAI.apiKey && settings.generalAI.endpoint && settings.generalAI.modelName) : !(settings.apiKey && settings.endpoint && settings.modelName)} className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
                 <Mic className="w-5 h-5" />
                 Next: Speech Recognition
               </button>
@@ -474,7 +474,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                     </div>
 
                     {!settings.speechRecognition.whisperModelDownloaded && (
-                      <button onClick={handleDownloadWhisperModel} disabled={isDownloadingWhisper} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors btn-pop">
+                      <button onClick={handleDownloadWhisperModel} disabled={isDownloadingWhisper} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
                         <Download className="w-4 h-4" />
                         {isDownloadingWhisper ? `Downloading... ${downloadProgress.toFixed(0)}%` : 'Download Model'}
                       </button>
@@ -515,10 +515,10 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
               </div>
 
               <div className="flex gap-2">
-                <button onClick={handleSetLater} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors btn-pop">
+                <button onClick={handleSetLater} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-all duration-200 btn-pop">
                   Set it later
                 </button>
-                <button onClick={handleSpeechNext} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg transition-all duration-200 btn-pop">
+                <button onClick={handleSpeechNext} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:bg-indigo-400 transition-all duration-200 btn-pop">
                   <ImageIcon className="w-5 h-5" />
                   Next: Image Recognition
                 </button>
@@ -801,10 +801,10 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
               </div>
 
               <div className="flex gap-2">
-                <button onClick={handleSetLater} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors btn-pop">
+                <button onClick={handleSetLater} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-all duration-200 btn-pop">
                   Set it later
                 </button>
-                <button onClick={handleImageComplete} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg transition-all duration-200 btn-pop">
+                <button onClick={handleImageComplete} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:bg-indigo-400 transition-all duration-200 btn-pop">
                   <CheckCircle className="w-5 h-5" />
                   Complete Setup
                 </button>
@@ -866,7 +866,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                   {importMode === 'import-file' && (
                     <>
                       <input ref={fileInputRef} type="file" accept=".ttconfig" onChange={handleImportFile} className="hidden" />
-                      <button onClick={() => fileInputRef.current?.click()} disabled={isProcessing || !password} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
+                      <button onClick={() => fileInputRef.current?.click()} disabled={isProcessing || !password} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
                         <Upload className="w-4 h-4" />
                         {isProcessing ? 'Importing...' : 'Select File'}
                       </button>
@@ -877,14 +877,14 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                   {importMode === 'import-qr' && (
                     <>
                       {!isScanning ? (
-                        <button onClick={startQRScanner} disabled={isProcessing || !password} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
+                        <button onClick={startQRScanner} disabled={isProcessing || !password} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
                           <Scan className="w-4 h-4" />
                           Start Scanning
                         </button>
                       ) : (
                         <div className="space-y-3">
                           <div id="qr-reader-wizard" className="rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700"></div>
-                          <button onClick={stopQRScanner} className="w-full px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors btn-pop">
+                          <button onClick={stopQRScanner} className="w-full px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all duration-200 btn-pop">
                             Stop Scanning
                           </button>
                         </div>

@@ -1265,6 +1265,9 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
         box-shadow: 0 2px 0 rgba(0,0,0,0.1);
         transform: translateY(2px);
       }
+      .static-shadow {
+        box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+      }
       .btn-pop {
         transition: transform 0.2s ease;
       }
@@ -1371,7 +1374,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       <div className="p-4">
         {/* Source Input */}
         <div className="relative">
-            {inputMethod === 'image' ? <div className="w-full h-32 rounded-2xl border-2 border-indigo-100 dark:border-gray-600 border-dashed bg-white dark:bg-gray-700 overflow-hidden cute-shadow">
+            {inputMethod === 'image' ? <div className="w-full h-32 rounded-2xl border-2 border-indigo-100 dark:border-gray-600 bg-white dark:bg-gray-700 overflow-hidden static-shadow">
                 {image ? (
                   <div className="relative w-full h-full">
                     <img
@@ -1401,17 +1404,28 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                   </div>
                 ) : !isOCRConfigured() && !useVLMMode ? (
                   // Show settings guidance when OCR is not configured
-                  <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-yellow-50 dark:bg-yellow-900/20">
-                    <Settings className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mb-2" />
-                    <p className="text-yellow-800 dark:text-yellow-200 text-center text-xs font-medium mb-2">
+                  <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-indigo-500/10 dark:bg-indigo-500/20">
+                    <Settings className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mb-2" />
+                    <p className="text-indigo-800 dark:text-indigo-200 text-center text-xs font-medium mb-3">
                       OCR Service Not Configured
-                    </p>
-                    <p className="text-yellow-700 dark:text-yellow-300 text-center text-xs mb-2">
-                      Configure OCR service in Settings to use image translation
                     </p>
                     <button
                       onClick={() => onOpenSettings('image')}
-                      className="px-3 py-1.5 bg-indigo-500 text-white text-xs rounded-lg btn-pop hover:bg-indigo-600"
+                      className="px-3 py-1.5 bg-indigo-500 text-white text-xs rounded-lg cute-shadow hover:bg-indigo-400 transition-all duration-200"
+                    >
+                      Open Settings
+                    </button>
+                  </div>
+                ) : !isVLMConfigured() && useVLMMode ? (
+                  // Show settings guidance when VLM is not configured
+                  <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-indigo-500/10 dark:bg-indigo-500/20">
+                    <Settings className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mb-2" />
+                    <p className="text-indigo-800 dark:text-indigo-200 text-center text-xs font-medium mb-3">
+                      VLM Service Not Configured
+                    </p>
+                    <button
+                      onClick={() => onOpenSettings('general')}
+                      className="px-3 py-1.5 bg-indigo-500 text-white text-xs rounded-lg cute-shadow hover:bg-indigo-400 transition-all duration-200"
                     >
                       Open Settings
                     </button>
@@ -1436,23 +1450,39 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                   </div>
                 )}
               </div> : <div className="relative">
-                {/* Textarea for text/audio input */}
-                <textarea
-                  ref={textareaRef}
-                  value={sourceText + (interimTranscript && isRecording ? (sourceText ? ' ' : '') + interimTranscript : '')}
-                  onChange={handleTextChange}
-                  placeholder={isRecording
-                    ? 'Listening...'
-                    : inputMethod === 'qa'
-                    ? 'Ask a question (e.g., "How to ask for the check?")'
-                    : textMode === 'explanation'
-                    ? 'Enter text to explain (word/sentence/grammar)...'
-                    : `Type in ${languageOptions.find(l => l.value === sourceLang)?.label}...`
-                  }
-                  className="w-full min-h-[8rem] max-h-[12.5rem] p-3 pr-12 rounded-2xl border-2 border-indigo-100 dark:border-gray-600 focus:ring-2 focus:ring-indigo-300 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 resize-none cute-shadow overflow-y-auto"
-                  style={{ height: 'auto' }}
-                  readOnly={isRecording}
-                />
+                {/* Check if Q/A requires General AI and show warning if not configured */}
+                {(inputMethod === 'qa' || (inputMethod === 'text' && textMode === 'explanation')) && !isGeneralAIConfigured() ? (
+                  <div className="w-full min-h-[8rem] rounded-2xl border-2 border-indigo-100 dark:border-gray-600 bg-indigo-500/10 dark:bg-indigo-500/20 overflow-hidden static-shadow flex flex-col items-center justify-center p-4">
+                    <Settings className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mb-2" />
+                    <p className="text-indigo-800 dark:text-indigo-200 text-center text-xs font-medium mb-3">
+                      {inputMethod === 'qa' ? 'Q&A Service Not Configured' : 'Explanation Service Not Configured'}
+                    </p>
+                    <button
+                      onClick={() => onOpenSettings('general')}
+                      className="px-3 py-1.5 bg-indigo-500 text-white text-xs rounded-lg cute-shadow hover:bg-indigo-400 transition-all duration-200"
+                    >
+                      Open Settings
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Textarea for text/audio input */}
+                    <textarea
+                      ref={textareaRef}
+                      value={sourceText + (interimTranscript && isRecording ? (sourceText ? ' ' : '') + interimTranscript : '')}
+                      onChange={handleTextChange}
+                      placeholder={isRecording
+                        ? 'Listening...'
+                        : inputMethod === 'qa'
+                        ? 'Ask a question (e.g., "How to ask for the check?")'
+                        : textMode === 'explanation'
+                        ? 'Enter text to explain (word/sentence/grammar)...'
+                        : `Type in ${languageOptions.find(l => l.value === sourceLang)?.label}...`
+                      }
+                      className="w-full min-h-[8rem] max-h-[12.5rem] p-3 pr-12 rounded-2xl border-2 border-indigo-100 dark:border-gray-600 focus:ring-2 focus:ring-indigo-300 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 resize-none static-shadow overflow-y-auto"
+                      style={{ height: 'auto' }}
+                      readOnly={isRecording}
+                    />
                 {/* Audio recording button (visible in text mode, hidden in Q/A) */}
                 {inputMethod !== 'qa' && (
                   <div className="absolute right-2 bottom-3">
@@ -1475,6 +1505,8 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                     )}
                   </div>
                 )}
+              </>
+            )}
               </div>}
             {/* Input Method Controls */}
             <div className="flex items-center justify-center mt-3 space-x-2">
@@ -1581,7 +1613,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
                   )}
                 </div>
               </div>
-              <div className="mt-2 p-3 min-h-[80px] bg-indigo-50 dark:bg-gray-700 rounded-2xl cute-shadow flex items-center justify-center" ref={targetInputRef}>
+              <div className="mt-2 p-3 min-h-[8rem] bg-indigo-50 dark:bg-gray-700 rounded-2xl cute-shadow flex items-center justify-center" ref={targetInputRef}>
                 {isTranslating && !targetText ? <div className="flex items-center justify-center py-4">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-indigo-500 dark:bg-indigo-400 rounded-full animate-bounce" style={{

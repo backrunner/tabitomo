@@ -233,7 +233,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
           </div>
           <button
             onClick={handleClose}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors btn-pop"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-all duration-200 btn-pop"
           >
             <X className="w-5 h-5" />
           </button>
@@ -338,7 +338,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                 <button
                   onClick={handleExportFile}
                   disabled={isProcessing || !password}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
                 >
                   <HardDriveUpload className="w-4 h-4" />
                   {isProcessing ? 'Exporting...' : 'Export to File'}
@@ -352,7 +352,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                     <button
                       onClick={handleExportQR}
                       disabled={isProcessing || !password}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
                     >
                       <QrCode className="w-4 h-4" />
                       {isProcessing ? 'Generating...' : 'Generate QR Code'}
@@ -383,7 +383,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isProcessing || !password}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 text-white font-semibold rounded-xl cute-shadow hover:bg-purple-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
                   >
                     <Upload className="w-4 h-4" />
                     {isProcessing ? 'Importing...' : 'Select File'}
@@ -398,7 +398,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                     <button
                       onClick={startQRScanner}
                       disabled={isProcessing || !password}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 text-white font-semibold rounded-xl cute-shadow hover:bg-purple-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
                     >
                       <Scan className="w-4 h-4" />
                       Start Scanning
@@ -408,7 +408,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                       <div id="qr-reader" className="rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700"></div>
                       <button
                         onClick={stopQRScanner}
-                        className="w-full px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors btn-pop"
+                        className="w-full px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all duration-200 btn-pop"
                       >
                         Stop Scanning
                       </button>
