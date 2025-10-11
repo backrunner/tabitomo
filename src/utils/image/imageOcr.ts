@@ -145,7 +145,46 @@ export async function performOCR(
     return ocrResults;
   } catch (error) {
     console.error('[OCR API] Error:', error);
-    throw new Error(`OCR failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+    // Provide user-friendly error messages
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+
+      // API Key errors
+      if (errorMsg.includes('api key') || errorMsg.includes('unauthorized') || errorMsg.includes('401')) {
+        throw new Error('Invalid OCR API key. Please check your Image OCR settings.');
+      }
+
+      // Network errors
+      if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('econnrefused')) {
+        throw new Error('Network error. Please check your internet connection and OCR endpoint.');
+      }
+
+      // Endpoint errors
+      if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+        throw new Error('Invalid OCR endpoint. Please check your Image OCR endpoint URL in Settings.');
+      }
+
+      // Rate limit errors
+      if (errorMsg.includes('rate limit') || errorMsg.includes('429') || errorMsg.includes('quota')) {
+        throw new Error('OCR API rate limit exceeded. Please try again later.');
+      }
+
+      // Image format errors
+      if (errorMsg.includes('image') || errorMsg.includes('format') || errorMsg.includes('invalid')) {
+        throw new Error('Invalid image format. Please use JPG, PNG, or other supported formats.');
+      }
+
+      // Timeout errors
+      if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+        throw new Error('OCR request timed out. Please try again.');
+      }
+
+      // Generic error with original message
+      throw new Error(`OCR failed: ${error.message}`);
+    }
+
+    throw new Error('OCR failed. Please try again.');
   }
 }
 
@@ -271,7 +310,51 @@ export async function translateImageWithVLM(
     return cleanedText;
   } catch (error) {
     console.error('[VLM Translation] Error:', error);
-    throw new Error(`VLM translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+    // Provide user-friendly error messages
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+
+      // API Key errors
+      if (errorMsg.includes('api key') || errorMsg.includes('unauthorized') || errorMsg.includes('401')) {
+        throw new Error('Invalid VLM API key. Please check your VLM settings.');
+      }
+
+      // Network errors
+      if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('econnrefused')) {
+        throw new Error('Network error. Please check your internet connection and VLM endpoint.');
+      }
+
+      // Endpoint errors
+      if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+        throw new Error('Invalid VLM endpoint. Please check your VLM endpoint URL in Settings.');
+      }
+
+      // Rate limit errors
+      if (errorMsg.includes('rate limit') || errorMsg.includes('429') || errorMsg.includes('quota')) {
+        throw new Error('VLM API rate limit exceeded. Please try again later.');
+      }
+
+      // Model errors
+      if (errorMsg.includes('model') || errorMsg.includes('not support')) {
+        throw new Error('VLM model error. Please check your VLM model name in Settings.');
+      }
+
+      // Image errors
+      if (errorMsg.includes('image') || errorMsg.includes('format') || errorMsg.includes('invalid')) {
+        throw new Error('Invalid image format. Please use JPG, PNG, or other supported formats.');
+      }
+
+      // Timeout errors
+      if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+        throw new Error('VLM request timed out. Please try again.');
+      }
+
+      // Generic error with original message
+      throw new Error(`VLM translation failed: ${error.message}`);
+    }
+
+    throw new Error('VLM translation failed. Please try again.');
   }
 }
 
@@ -449,7 +532,51 @@ ${settings.vlm.enableThinking ? '\n6. You may include your thinking process usin
     console.log('[VLM Streaming] Translation completed');
   } catch (error) {
     console.error('[VLM Streaming] Error:', error);
-    throw new Error(`VLM streaming translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+    // Provide user-friendly error messages
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+
+      // API Key errors
+      if (errorMsg.includes('api key') || errorMsg.includes('unauthorized') || errorMsg.includes('401')) {
+        throw new Error('Invalid VLM API key. Please check your VLM settings.');
+      }
+
+      // Network errors
+      if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('econnrefused')) {
+        throw new Error('Network error. Please check your internet connection and VLM endpoint.');
+      }
+
+      // Endpoint errors
+      if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+        throw new Error('Invalid VLM endpoint. Please check your VLM endpoint URL in Settings.');
+      }
+
+      // Rate limit errors
+      if (errorMsg.includes('rate limit') || errorMsg.includes('429') || errorMsg.includes('quota')) {
+        throw new Error('VLM API rate limit exceeded. Please try again later.');
+      }
+
+      // Model errors
+      if (errorMsg.includes('model') || errorMsg.includes('not support')) {
+        throw new Error('VLM model error. Please check your VLM model name in Settings.');
+      }
+
+      // Image errors
+      if (errorMsg.includes('image') || errorMsg.includes('format') || errorMsg.includes('invalid')) {
+        throw new Error('Invalid image format. Please use JPG, PNG, or other supported formats.');
+      }
+
+      // Timeout errors
+      if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+        throw new Error('VLM request timed out. Please try again.');
+      }
+
+      // Generic error with original message
+      throw new Error(`VLM streaming translation failed: ${error.message}`);
+    }
+
+    throw new Error('VLM streaming translation failed. Please try again.');
   }
 }
 

@@ -229,7 +229,46 @@ Respond with the translation in JSON format.`,
     return result.object.translatedText;
   } catch (error) {
     console.error('Translation error:', error);
-    throw new Error(`Translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+    // Provide user-friendly error messages
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+
+      // API Key errors
+      if (errorMsg.includes('api key') || errorMsg.includes('unauthorized') || errorMsg.includes('401')) {
+        throw new Error('Invalid API key. Please check your API key in Settings.');
+      }
+
+      // Network errors
+      if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('econnrefused')) {
+        throw new Error('Network error. Please check your internet connection and API endpoint.');
+      }
+
+      // Endpoint errors
+      if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+        throw new Error('Invalid API endpoint. Please check your endpoint URL in Settings.');
+      }
+
+      // Rate limit errors
+      if (errorMsg.includes('rate limit') || errorMsg.includes('429') || errorMsg.includes('quota')) {
+        throw new Error('API rate limit exceeded. Please try again later.');
+      }
+
+      // Model errors
+      if (errorMsg.includes('model') || errorMsg.includes('not support')) {
+        throw new Error('Model error. Please check your model name in Settings.');
+      }
+
+      // Timeout errors
+      if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+        throw new Error('Request timed out. Please try again.');
+      }
+
+      // Generic error with original message
+      throw new Error(`Translation failed: ${error.message}`);
+    }
+
+    throw new Error('Translation failed. Please try again.');
   }
 }
 

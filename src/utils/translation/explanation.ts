@@ -152,7 +152,46 @@ Format your response in markdown. Provide ONLY the explanation, no meta-commenta
     console.log('[Explanation] Explanation completed');
   } catch (error) {
     console.error('[Explanation] Error:', error);
-    throw new Error(`Explanation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+    // Provide user-friendly error messages
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+
+      // API Key errors
+      if (errorMsg.includes('api key') || errorMsg.includes('unauthorized') || errorMsg.includes('401')) {
+        throw new Error('Invalid API key. Please check your General AI settings.');
+      }
+
+      // Network errors
+      if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('econnrefused')) {
+        throw new Error('Network error. Please check your internet connection and API endpoint.');
+      }
+
+      // Endpoint errors
+      if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+        throw new Error('Invalid API endpoint. Please check your General AI endpoint URL in Settings.');
+      }
+
+      // Rate limit errors
+      if (errorMsg.includes('rate limit') || errorMsg.includes('429') || errorMsg.includes('quota')) {
+        throw new Error('API rate limit exceeded. Please try again later.');
+      }
+
+      // Model errors
+      if (errorMsg.includes('model') || errorMsg.includes('not support')) {
+        throw new Error('Model error. Please check your General AI model name in Settings.');
+      }
+
+      // Timeout errors
+      if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+        throw new Error('Request timed out. Please try again.');
+      }
+
+      // Generic error with original message
+      throw new Error(`Explanation failed: ${error.message}`);
+    }
+
+    throw new Error('Explanation failed. Please try again.');
   }
 }
 
@@ -304,6 +343,45 @@ Format your response in markdown. Provide ONLY the answer, no meta-commentary.`,
     console.log('[Quick Q/A] Q/A completed');
   } catch (error) {
     console.error('[Quick Q/A] Error:', error);
-    throw new Error(`Q/A failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+    // Provide user-friendly error messages
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+
+      // API Key errors
+      if (errorMsg.includes('api key') || errorMsg.includes('unauthorized') || errorMsg.includes('401')) {
+        throw new Error('Invalid API key. Please check your General AI settings.');
+      }
+
+      // Network errors
+      if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('econnrefused')) {
+        throw new Error('Network error. Please check your internet connection and API endpoint.');
+      }
+
+      // Endpoint errors
+      if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+        throw new Error('Invalid API endpoint. Please check your General AI endpoint URL in Settings.');
+      }
+
+      // Rate limit errors
+      if (errorMsg.includes('rate limit') || errorMsg.includes('429') || errorMsg.includes('quota')) {
+        throw new Error('API rate limit exceeded. Please try again later.');
+      }
+
+      // Model errors
+      if (errorMsg.includes('model') || errorMsg.includes('not support')) {
+        throw new Error('Model error. Please check your General AI model name in Settings.');
+      }
+
+      // Timeout errors
+      if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+        throw new Error('Request timed out. Please try again.');
+      }
+
+      // Generic error with original message
+      throw new Error(`Q/A failed: ${error.message}`);
+    }
+
+    throw new Error('Q/A failed. Please try again.');
   }
 }
