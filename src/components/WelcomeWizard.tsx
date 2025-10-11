@@ -216,45 +216,35 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
         }
       }}
     >
-      <div
-        className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
+      <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200" onMouseDown={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <img src="/icons/buddy.png" alt="Buddy" className="w-8 h-8" />
             <div>
-              <h2 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white">
-                Welcome to tabitomo!
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Your AI-powered travel companion
-              </p>
+              <h2 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white">Welcome to tabitomo!</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Your AI-powered travel companion</p>
             </div>
           </div>
-          <button
-            onClick={onSkip}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors btn-pop"
-            title="Skip for now"
-          >
+          <button onClick={onSkip} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors btn-pop" title="Skip for now">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 max-h-[60vh] overflow-y-overlay custom-scrollbar">
+        <div className="p-6 pt-4 max-h-[60vh] overflow-y-overlay custom-scrollbar">
           {currentStep === 'choice' && setupMode === 'manual' && (
             <div className="space-y-3">
-              <div className="text-center mb-3">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Choose how you'd like to get started
-                </p>
+              <div className="text-center mb-3 pt-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Choose how you'd like to get started</p>
               </div>
 
               {/* Manual Setup */}
               <button
-                onClick={() => { setSetupMode('manual'); setCurrentStep('translation'); }}
+                onClick={() => {
+                  setSetupMode('manual');
+                  setCurrentStep('translation');
+                }}
                 className="w-full p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 cute-shadow btn-pop text-left"
               >
                 <div className="flex items-start gap-3">
@@ -263,16 +253,16 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-800 dark:text-white">Manual Setup</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      Configure your AI service step by step
-                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Configure your AI service step by step</p>
                   </div>
                 </div>
               </button>
 
               {/* Import Settings */}
               <button
-                onClick={() => { setSetupMode('import'); }}
+                onClick={() => {
+                  setSetupMode('import');
+                }}
                 className="w-full p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 cute-shadow btn-pop text-left"
               >
                 <div className="flex items-start gap-3">
@@ -281,9 +271,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-800 dark:text-white">Import Settings</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      Load settings from file or QR code
-                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Load settings from file or QR code</p>
                   </div>
                 </div>
               </button>
@@ -291,8 +279,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
               {/* Info Box */}
               <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  <strong>Note:</strong> You can always change these settings later from the settings menu.
-                  Skipping will show this wizard again on next launch.
+                  <strong>Note:</strong> You can always change these settings later from the settings menu. Skipping will show this wizard again on next launch.
                 </p>
               </div>
             </div>
@@ -300,38 +287,19 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
 
           {currentStep === 'translation' && setupMode === 'manual' && (
             <div className="space-y-4">
-              <button
-                onClick={handleBackToChoice}
-                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-              >
+              <button onClick={handleBackToChoice} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
                 ← Back to options
               </button>
 
               {/* Step 1: Choose Config Mode */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  What would you like to configure?
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">What would you like to configure?</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setConfigMode('general')}
-                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                      configMode === 'general'
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                    }`}
-                  >
+                  <button onClick={() => setConfigMode('general')} className={`p-3 rounded-xl border-2 transition-all duration-200 ${configMode === 'general' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}>
                     <div className="text-sm font-bold text-gray-800 dark:text-white">General AI</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">For all services</div>
                   </button>
-                  <button
-                    onClick={() => setConfigMode('translation')}
-                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                      configMode === 'translation'
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                    }`}
-                  >
+                  <button onClick={() => setConfigMode('translation')} className={`p-3 rounded-xl border-2 transition-all duration-200 ${configMode === 'translation' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}>
                     <div className="text-sm font-bold text-gray-800 dark:text-white">Translation</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Specific service</div>
                   </button>
@@ -342,57 +310,28 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
               {configMode === 'general' ? (
                 <div className="space-y-3">
                   <h3 className="text-sm font-bold text-gray-800 dark:text-white">General AI Service</h3>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    This service will be used for all AI features (translation, image OCR, VLM)
-                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">This service will be used for all AI features (translation, image OCR, VLM)</p>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      API Endpoint
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.generalAI.endpoint}
-                      onChange={(e) => setSettings({ ...settings, generalAI: { ...settings.generalAI, endpoint: e.target.value } })}
-                      placeholder="https://api.openai.com/v1"
-                      className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">API Endpoint</label>
+                    <input type="text" value={settings.generalAI.endpoint} onChange={(e) => setSettings({ ...settings, generalAI: { ...settings.generalAI, endpoint: e.target.value } })} placeholder="https://api.openai.com/v1" className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors" />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Model Name
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.generalAI.modelName}
-                      onChange={(e) => setSettings({ ...settings, generalAI: { ...settings.generalAI, modelName: e.target.value } })}
-                      placeholder="gpt-5"
-                      className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Model Name</label>
+                    <input type="text" value={settings.generalAI.modelName} onChange={(e) => setSettings({ ...settings, generalAI: { ...settings.generalAI, modelName: e.target.value } })} placeholder="gpt-5" className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors" />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      API Key
-                    </label>
-                    <input
-                      type="password"
-                      value={settings.generalAI.apiKey}
-                      onChange={(e) => setSettings({ ...settings, generalAI: { ...settings.generalAI, apiKey: e.target.value } })}
-                      placeholder="sk-..."
-                      className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">API Key</label>
+                    <input type="password" value={settings.generalAI.apiKey} onChange={(e) => setSettings({ ...settings, generalAI: { ...settings.generalAI, apiKey: e.target.value } })} placeholder="sk-..." className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors" />
                   </div>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-gray-800 dark:text-white">Translation Service</h3>
-                    <button
-                      onClick={handleQuickFillSiliconFlow}
-                      className="px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors btn-pop"
-                    >
+                    <button onClick={handleQuickFillSiliconFlow} className="px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors btn-pop">
                       Recommended Settings
                     </button>
                   </div>
@@ -404,42 +343,18 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      API Endpoint
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.endpoint}
-                      onChange={(e) => setSettings({ ...settings, endpoint: e.target.value })}
-                      placeholder="https://api.siliconflow.cn/v1"
-                      className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">API Endpoint</label>
+                    <input type="text" value={settings.endpoint} onChange={(e) => setSettings({ ...settings, endpoint: e.target.value })} placeholder="https://api.siliconflow.cn/v1" className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors" />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Model Name
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.modelName}
-                      onChange={(e) => setSettings({ ...settings, modelName: e.target.value })}
-                      placeholder="tencent/Hunyuan-MT-7B"
-                      className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Model Name</label>
+                    <input type="text" value={settings.modelName} onChange={(e) => setSettings({ ...settings, modelName: e.target.value })} placeholder="tencent/Hunyuan-MT-7B" className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors" />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      API Key
-                    </label>
-                    <input
-                      type="password"
-                      value={settings.apiKey}
-                      onChange={(e) => setSettings({ ...settings, apiKey: e.target.value })}
-                      placeholder="sk-..."
-                      className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">API Key</label>
+                    <input type="password" value={settings.apiKey} onChange={(e) => setSettings({ ...settings, apiKey: e.target.value })} placeholder="sk-..." className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors" />
                   </div>
                 </div>
               )}
@@ -450,15 +365,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 </p>
               </div>
 
-              <button
-                onClick={handleTranslationNext}
-                disabled={
-                  configMode === 'general'
-                    ? !(settings.generalAI.apiKey && settings.generalAI.endpoint && settings.generalAI.modelName)
-                    : !(settings.apiKey && settings.endpoint && settings.modelName)
-                }
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
-              >
+              <button onClick={handleTranslationNext} disabled={configMode === 'general' ? !(settings.generalAI.apiKey && settings.generalAI.endpoint && settings.generalAI.modelName) : !(settings.apiKey && settings.endpoint && settings.modelName)} className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
                 <Mic className="w-5 h-5" />
                 Next: Speech Recognition
               </button>
@@ -467,10 +374,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
 
           {currentStep === 'speech' && (
             <div className="space-y-4">
-              <button
-                onClick={() => setCurrentStep('translation')}
-                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-              >
+              <button onClick={() => setCurrentStep('translation')} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
                 ← Back to translation
               </button>
 
@@ -484,9 +388,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
 
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Provider
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Provider</label>
                   <Select
                     value={settings.speechRecognition.provider}
                     onValueChange={(value: 'web-speech' | 'siliconflow' | 'local-whisper') =>
@@ -510,9 +412,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 {settings.speechRecognition.provider === 'siliconflow' && (
                   <>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Model Name
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Model Name</label>
                       <input
                         type="text"
                         value={settings.speechRecognition.modelName || 'TeleAI/TeleSpeechASR'}
@@ -527,9 +427,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        API Key
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">API Key</label>
                       <input
                         type="password"
                         value={settings.speechRecognition.apiKey || ''}
@@ -542,9 +440,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                         placeholder={configMode === 'translation' && settings.apiKey ? 'Using Translation API Key' : 'sk-...'}
                         className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
                       />
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Leave empty to use the same API key as translation service
-                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Leave empty to use the same API key as translation service</p>
                     </div>
                   </>
                 )}
@@ -552,9 +448,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 {settings.speechRecognition.provider === 'local-whisper' && (
                   <>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Model Size
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Model Size</label>
                       <Select
                         value={settings.speechRecognition.whisperModel || 'base'}
                         onValueChange={(value: 'tiny' | 'base' | 'small') =>
@@ -580,24 +474,16 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                     </div>
 
                     {!settings.speechRecognition.whisperModelDownloaded && (
-                      <button
-                        onClick={handleDownloadWhisperModel}
-                        disabled={isDownloadingWhisper}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors btn-pop"
-                      >
+                      <button onClick={handleDownloadWhisperModel} disabled={isDownloadingWhisper} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors btn-pop">
                         <Download className="w-4 h-4" />
-                        {isDownloadingWhisper
-                          ? `Downloading... ${downloadProgress.toFixed(0)}%`
-                          : 'Download Model'}
+                        {isDownloadingWhisper ? `Downloading... ${downloadProgress.toFixed(0)}%` : 'Download Model'}
                       </button>
                     )}
 
                     {settings.speechRecognition.whisperModelDownloaded && (
                       <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800 flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                        <p className="text-xs text-green-800 dark:text-green-200">
-                          Model downloaded and ready to use
-                        </p>
+                        <p className="text-xs text-green-800 dark:text-green-200">Model downloaded and ready to use</p>
                       </div>
                     )}
                   </>
@@ -629,16 +515,10 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
               </div>
 
               <div className="flex gap-2">
-                <button
-                  onClick={handleSetLater}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors btn-pop"
-                >
+                <button onClick={handleSetLater} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors btn-pop">
                   Set it later
                 </button>
-                <button
-                  onClick={handleSpeechNext}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg transition-all duration-200 btn-pop"
-                >
+                <button onClick={handleSpeechNext} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg transition-all duration-200 btn-pop">
                   <ImageIcon className="w-5 h-5" />
                   Next: Image Recognition
                 </button>
@@ -648,17 +528,14 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
 
           {currentStep === 'image' && (
             <div className="space-y-4">
-              <button
-                onClick={() => setCurrentStep('speech')}
-                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-              >
+              <button onClick={() => setCurrentStep('speech')} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
                 ← Back to speech
               </button>
 
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
                   <ImageIcon className="w-4 h-4" />
-                  Image Recognition
+                  OCR Recognition
                 </h3>
                 <span className="text-xs text-gray-500 dark:text-gray-400">Step 3 of 3</span>
               </div>
@@ -666,14 +543,8 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
               <div className="space-y-4">
                 {/* OCR Section */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4" />
-                    OCR Recognition
-                  </h3>
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      OCR Provider
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">OCR Provider</label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() =>
@@ -686,11 +557,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                             },
                           })
                         }
-                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                          settings.imageOCR.provider === 'qwen'
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                        }`}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.imageOCR.provider === 'qwen' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
                         <div className="text-sm font-bold text-gray-800 dark:text-white">Qwen VL OCR</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Aliyun DashScope</div>
@@ -706,11 +573,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                             },
                           })
                         }
-                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                          settings.imageOCR.provider === 'custom'
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                        }`}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.imageOCR.provider === 'custom' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
                         <div className="text-sm font-bold text-gray-800 dark:text-white">Custom</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Your endpoint</div>
@@ -722,9 +585,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 {/* Region Selection for Qwen */}
                 {settings.imageOCR.provider === 'qwen' && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Region
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Region</label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() =>
@@ -733,11 +594,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                             imageOCR: { ...settings.imageOCR, endpoint: DASHSCOPE_ENDPOINT },
                           })
                         }
-                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                          settings.imageOCR.endpoint === DASHSCOPE_ENDPOINT
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                        }`}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.imageOCR.endpoint === DASHSCOPE_ENDPOINT ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
                         <div className="text-sm font-bold text-gray-800 dark:text-white">Beijing</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">China Mainland</div>
@@ -752,11 +609,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                             },
                           })
                         }
-                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                          settings.imageOCR.endpoint !== DASHSCOPE_ENDPOINT
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                        }`}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.imageOCR.endpoint !== DASHSCOPE_ENDPOINT ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
                         <div className="text-sm font-bold text-gray-800 dark:text-white">Singapore</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">International</div>
@@ -769,9 +622,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 {settings.imageOCR.provider === 'custom' && (
                   <>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        API Endpoint
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">API Endpoint</label>
                       <input
                         type="text"
                         value={settings.imageOCR.endpoint || ''}
@@ -787,9 +638,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Model Name
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Model Name</label>
                       <input
                         type="text"
                         value={settings.imageOCR.modelName || ''}
@@ -807,10 +656,8 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 )}
 
                 {/* API Key for OCR */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {settings.imageOCR.provider === 'qwen' ? 'DashScope API Key' : 'API Key'}
-                  </label>
+                <div className="space-y-2 pb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{settings.imageOCR.provider === 'qwen' ? 'DashScope API Key' : 'API Key'}</label>
                   <input
                     type="password"
                     value={settings.imageOCR.apiKey || ''}
@@ -826,15 +673,13 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 </div>
 
                 {/* VLM Section */}
-                <div className="space-y-3 pt-3 border-t-2 border-gray-200 dark:border-gray-700">
+                <div className="space-y-3 pt-5 border-t-2 border-gray-200 dark:border-gray-700">
                   <h3 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
                     <Sparkles className="w-4 h-4" />
                     VLM Direct Translation
                   </h3>
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      VLM Settings
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">VLM Settings</label>
                     <div className="grid grid-cols-3 gap-2">
                       <button
                         onClick={() =>
@@ -843,11 +688,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                             vlm: { ...settings.vlm, useGeneralAI: true, useCustom: false },
                           })
                         }
-                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                          settings.vlm.useGeneralAI
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                        }`}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${settings.vlm.useGeneralAI ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
                         <div className="text-sm font-bold text-gray-800 dark:text-white">General AI</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Use General</div>
@@ -859,11 +700,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                             vlm: { ...settings.vlm, useGeneralAI: false, useCustom: false },
                           })
                         }
-                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                          !settings.vlm.useGeneralAI && !settings.vlm.useCustom
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                        }`}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${!settings.vlm.useGeneralAI && !settings.vlm.useCustom ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
                         <div className="text-sm font-bold text-gray-800 dark:text-white">Use OCR</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Same as OCR</div>
@@ -875,11 +712,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                             vlm: { ...settings.vlm, useGeneralAI: false, useCustom: true },
                           })
                         }
-                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                          !settings.vlm.useGeneralAI && settings.vlm.useCustom
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                        }`}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${!settings.vlm.useGeneralAI && settings.vlm.useCustom ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                       >
                         <div className="text-sm font-bold text-gray-800 dark:text-white">Custom</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Custom VLM</div>
@@ -890,9 +723,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                   {!settings.vlm.useGeneralAI && settings.vlm.useCustom && (
                     <>
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          VLM API Endpoint
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">VLM API Endpoint</label>
                         <input
                           type="text"
                           value={settings.vlm.endpoint || ''}
@@ -907,9 +738,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          VLM Model Name
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">VLM Model Name</label>
                         <input
                           type="text"
                           value={settings.vlm.modelName || ''}
@@ -924,9 +753,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          VLM API Key
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">VLM API Key</label>
                         <input
                           type="password"
                           value={settings.vlm.apiKey || ''}
@@ -950,9 +777,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                         <label htmlFor="thinkingMode" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Enable Thinking Mode
                         </label>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          Show model's reasoning process in VLM translations
-                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Show model's reasoning process in VLM translations</p>
                       </div>
                       <Switch
                         id="thinkingMode"
@@ -976,16 +801,10 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
               </div>
 
               <div className="flex gap-2">
-                <button
-                  onClick={handleSetLater}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors btn-pop"
-                >
+                <button onClick={handleSetLater} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors btn-pop">
                   Set it later
                 </button>
-                <button
-                  onClick={handleImageComplete}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg transition-all duration-200 btn-pop"
-                >
+                <button onClick={handleImageComplete} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg transition-all duration-200 btn-pop">
                   <CheckCircle className="w-5 h-5" />
                   Complete Setup
                 </button>
@@ -996,33 +815,22 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
           {setupMode === 'import' && (
             <div className="space-y-4">
               {!importMode && (
-                <button
-                  onClick={handleBackToChoice}
-                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
+                <button onClick={handleBackToChoice} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
                   ← Back to options
                 </button>
               )}
 
               {!importMode ? (
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Import your encrypted settings from file or QR code
-                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Import your encrypted settings from file or QR code</p>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setImportMode('import-file')}
-                      className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 min-h-[100px] flex flex-col items-center justify-center btn-pop"
-                    >
+                    <button onClick={() => setImportMode('import-file')} className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 min-h-[100px] flex flex-col items-center justify-center btn-pop">
                       <Upload className="w-6 h-6 mb-2 text-indigo-500" />
                       <div className="text-sm font-bold text-gray-800 dark:text-white">File</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">From .ttconfig</div>
                     </button>
-                    <button
-                      onClick={() => setImportMode('import-qr')}
-                      className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 min-h-[100px] flex flex-col items-center justify-center btn-pop"
-                    >
+                    <button onClick={() => setImportMode('import-qr')} className="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 min-h-[100px] flex flex-col items-center justify-center btn-pop">
                       <Scan className="w-6 h-6 mb-2 text-indigo-500" />
                       <div className="text-sm font-bold text-gray-800 dark:text-white">Scan QR</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Use camera</div>
@@ -1037,10 +845,7 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <button
-                    onClick={() => setImportMode(null)}
-                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-                  >
+                  <button onClick={() => setImportMode(null)} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
                     ← Back to import options
                   </button>
 
@@ -1050,19 +855,8 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                       Password
                     </label>
                     <div className="relative">
-                      <input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter decryption password"
-                        className="w-full px-3 py-2 pr-10 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                      >
+                      <input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter decryption password" className="w-full px-3 py-2 pr-10 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
@@ -1071,18 +865,8 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                   {/* Import File */}
                   {importMode === 'import-file' && (
                     <>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".ttconfig"
-                        onChange={handleImportFile}
-                        className="hidden"
-                      />
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isProcessing || !password}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
-                      >
+                      <input ref={fileInputRef} type="file" accept=".ttconfig" onChange={handleImportFile} className="hidden" />
+                      <button onClick={() => fileInputRef.current?.click()} disabled={isProcessing || !password} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
                         <Upload className="w-4 h-4" />
                         {isProcessing ? 'Importing...' : 'Select File'}
                       </button>
@@ -1093,21 +877,14 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
                   {importMode === 'import-qr' && (
                     <>
                       {!isScanning ? (
-                        <button
-                          onClick={startQRScanner}
-                          disabled={isProcessing || !password}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop"
-                        >
+                        <button onClick={startQRScanner} disabled={isProcessing || !password} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white font-semibold rounded-xl cute-shadow hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 btn-pop">
                           <Scan className="w-4 h-4" />
                           Start Scanning
                         </button>
                       ) : (
                         <div className="space-y-3">
                           <div id="qr-reader-wizard" className="rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700"></div>
-                          <button
-                            onClick={stopQRScanner}
-                            className="w-full px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors btn-pop"
-                          >
+                          <button onClick={stopQRScanner} className="w-full px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors btn-pop">
                             Stop Scanning
                           </button>
                         </div>
