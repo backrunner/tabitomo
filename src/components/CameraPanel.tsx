@@ -120,15 +120,15 @@ export const CameraPanel: React.FC<CameraPanelProps> = ({ isOpen, onClose, onCap
         <div className="flex items-center justify-between">
           <button
             onClick={handleClose}
-            className="p-2 text-white hover:bg-white/20 rounded-full transition-colors"
+            className="p-2 bg-indigo-500 text-white hover:bg-indigo-400 rounded-full transition-colors duration-200 cute-shadow"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
           <button
             onClick={switchCamera}
-            className="p-2 text-white hover:bg-white/20 rounded-full transition-colors"
+            className="p-2 bg-indigo-500 text-white hover:bg-indigo-400 rounded-full transition-colors duration-200 cute-shadow"
           >
-            <RotateCw className="w-6 h-6" />
+            <RotateCw className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -161,9 +161,9 @@ export const CameraPanel: React.FC<CameraPanelProps> = ({ isOpen, onClose, onCap
         <div className="flex items-center justify-center">
           <button
             onClick={handleCapture}
-            className="w-20 h-20 rounded-full bg-white border-4 border-gray-300 hover:bg-gray-100 transition-all duration-200 shadow-2xl relative overflow-hidden"
+            className="w-16 h-16 rounded-full bg-white hover:bg-gray-50 transition-colors duration-200 cute-shadow flex items-center justify-center"
           >
-            <div className="absolute inset-2 rounded-full bg-white border-2 border-gray-400"></div>
+            <div className="w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-400 transition-colors duration-200"></div>
           </button>
         </div>
       </div>
