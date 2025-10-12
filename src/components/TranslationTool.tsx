@@ -1349,7 +1349,7 @@ export const TranslationTool: React.FC<TranslationToolProps> = ({ settings, onOp
       document.head.removeChild(style);
     };
   }, []);
-  return <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-lg overflow-hidden">
+  return <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-lg overflow-hidden -mt-4 sm:mt-0">
       {/* Header */}
       <div className="p-4 bg-indigo-500 text-white flex items-center justify-between">
         <div className="flex items-center space-x-2">
