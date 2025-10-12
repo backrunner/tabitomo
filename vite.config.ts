@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 import UnoCSS from '@unocss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
+import type { PluginOption } from 'vite';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -101,13 +102,13 @@ export default defineConfig(({ mode }) => ({
       }
     }),
     // Bundle analyzer - only in analyze mode
-    mode === 'analyze' && visualizer({
+    ...(mode === 'analyze' ? [visualizer({
       open: true,
       filename: 'dist/stats.html',
       gzipSize: true,
       brotliSize: true,
-    })
-  ].filter(Boolean),
+    }) as PluginOption] : [])
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -168,6 +169,12 @@ export default defineConfig(({ mode }) => ({
               id.includes('@ai-sdk/') ||
               id.includes('node_modules/openai/')) {
             return 'vendor-ai';
+          }
+
+          // Whisper Web (WASM-based, very large) - separate chunk for lazy loading
+          if (id.includes('node_modules/@remotion/whisper-web/') ||
+              id.includes('@remotion/whisper')) {
+            return 'vendor-whisper';
           }
 
           // Utilities used throughout the app
