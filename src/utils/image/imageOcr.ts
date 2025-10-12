@@ -11,6 +11,36 @@ export interface OCRTextLocation {
   rotate_rect?: [number, number, number, number, number]; // [center_x, center_y, width, height, angle]
 }
 
+// OpenAI SDK extended image URL content type
+interface OpenAIImageContent {
+  type: 'image_url';
+  image_url: {
+    url: string;
+  };
+  min_pixels?: number;
+  max_pixels?: number;
+}
+
+// OCR word info from API response
+interface OCRWordInfo {
+  text: string;
+  location?: [number, number, number, number, number, number, number, number];
+  rotate_rect?: [number, number, number, number, number];
+}
+
+// OCR API response structures
+interface OCRResponseStandard {
+  ocr_result: {
+    words_info: OCRWordInfo[];
+  };
+}
+
+interface OCRResponseFlat {
+  words_info: OCRWordInfo[];
+}
+
+type OCRResponse = OCRResponseStandard | OCRResponseFlat | OCRWordInfo[] | { ocr_result: Record<string, unknown> } | string;
+
 /**
  * Perform OCR on image using Qwen VL OCR or custom provider
  */
@@ -66,7 +96,7 @@ export async function performOCR(
               min_pixels: 28 * 28 * 4,
               // 输入图像的最大像素阈值，超过该值图像会按原比例缩小，直到总像素低于max_pixels
               max_pixels: 28 * 28 * 8192,
-            } as any,
+            } as OpenAIImageContent,
             {
               type: 'text',
               text: prompt,
@@ -85,12 +115,12 @@ export async function performOCR(
     }
 
     // Parse JSON response
-    let parsedData;
+    let parsedData: OCRResponse;
     try {
       // Try to extract JSON from markdown code blocks if present
       const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
       const jsonStr = jsonMatch ? jsonMatch[1] : content;
-      parsedData = JSON.parse(jsonStr.trim());
+      parsedData = JSON.parse(jsonStr.trim()) as OCRResponse;
     } catch (parseError) {
       console.error('[OCR Parser] Failed to parse JSON:', parseError);
       console.error('[OCR Parser] Content:', content);
@@ -100,20 +130,27 @@ export async function performOCR(
     console.log('[OCR API] Parsed data:', JSON.stringify(parsedData, null, 2));
 
     // Handle various response structures
-    let wordsInfo: any[];
-    if (parsedData.ocr_result && Array.isArray(parsedData.ocr_result.words_info)) {
-      // Standard structure: { ocr_result: { words_info: [...] } }
-      wordsInfo = parsedData.ocr_result.words_info;
-    } else if (Array.isArray(parsedData.words_info)) {
-      // Flat structure: { words_info: [...] }
-      wordsInfo = parsedData.words_info;
+    let wordsInfo: OCRWordInfo[];
+    if (typeof parsedData === 'object' && parsedData !== null && !Array.isArray(parsedData)) {
+      if ('ocr_result' in parsedData && typeof parsedData.ocr_result === 'object' && parsedData.ocr_result !== null) {
+        if ('words_info' in parsedData.ocr_result && Array.isArray(parsedData.ocr_result.words_info)) {
+          // Standard structure: { ocr_result: { words_info: [...] } }
+          wordsInfo = parsedData.ocr_result.words_info;
+        } else {
+          // Model didn't output words_info, return empty array
+          console.warn('[OCR API] No words_info in response, returning empty results');
+          return [];
+        }
+      } else if ('words_info' in parsedData && Array.isArray(parsedData.words_info)) {
+        // Flat structure: { words_info: [...] }
+        wordsInfo = parsedData.words_info;
+      } else {
+        console.warn('[OCR API] Unknown response structure:', parsedData);
+        return [];
+      }
     } else if (Array.isArray(parsedData)) {
       // Direct array: [{ text: "...", location: [...], rotate_rect: [...] }, ...]
       wordsInfo = parsedData;
-    } else if (parsedData.ocr_result && !parsedData.ocr_result.words_info) {
-      // Model didn't output words_info, return empty array
-      console.warn('[OCR API] No words_info in response, returning empty results');
-      return [];
     } else if (typeof parsedData === 'string') {
       // Model returned plain text instead of JSON structure
       console.warn('[OCR API] Received plain text instead of structured data');
@@ -126,8 +163,8 @@ export async function performOCR(
     console.log('[OCR API] Found', wordsInfo.length, 'text regions');
 
     const ocrResults: OCRTextLocation[] = wordsInfo
-      .filter((region: any) => region.text) // Only include regions with text
-      .map((region: any, idx: number) => {
+      .filter((region: OCRWordInfo) => region.text) // Only include regions with text
+      .map((region: OCRWordInfo, idx: number) => {
         console.log(`[OCR Parser] Text region ${idx + 1}:`, {
           text: region.text,
           location: region.location,
