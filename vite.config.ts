@@ -3,9 +3,10 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import UnoCSS from '@unocss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     UnoCSS(),
@@ -98,8 +99,15 @@ export default defineConfig({
         ],
         navigateFallback: null
       }
+    }),
+    // Bundle analyzer - only in analyze mode
+    mode === 'analyze' && visualizer({
+      open: true,
+      filename: 'dist/stats.html',
+      gzipSize: true,
+      brotliSize: true,
     })
-  ],
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -180,4 +188,4 @@ export default defineConfig({
       }
     }
   },
-});
+}));
