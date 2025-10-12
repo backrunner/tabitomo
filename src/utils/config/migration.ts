@@ -36,6 +36,7 @@ const migrateV0ToV1: Migration<UnknownRecord, AIConfigV1> = {
   description: 'Initial versioning - adds _version field and ensures all required fields exist',
   migrate: (oldConfig: UnknownRecord): AIConfigV1 => {
     const oldGeneralAI = (oldConfig.generalAI as UnknownRecord | undefined) || {};
+    const oldTranslation = (oldConfig.translation as UnknownRecord | undefined) || {};
     const oldSpeechRecognition = (oldConfig.speechRecognition as UnknownRecord | undefined) || {};
     const oldImageOCR = (oldConfig.imageOCR as UnknownRecord | undefined) || {};
     const oldVlm = (oldConfig.vlm as UnknownRecord | undefined) || {};
@@ -48,6 +49,10 @@ const migrateV0ToV1: Migration<UnknownRecord, AIConfigV1> = {
         apiKey: (oldGeneralAI.apiKey as string | undefined) || '',
         endpoint: (oldGeneralAI.endpoint as string | undefined) || '',
         modelName: (oldGeneralAI.modelName as string | undefined) || '',
+      },
+      // Ensure translation exists with defaults
+      translation: {
+        outputMode: (oldTranslation.outputMode as 'plain' | 'structured' | undefined) || 'structured',
       },
       // Ensure speechRecognition exists with defaults
       speechRecognition: {

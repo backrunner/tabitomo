@@ -16,6 +16,13 @@ export { validateSchemaBase as validateSchema, applyDefaults };
 export const CURRENT_SCHEMA_VERSION = 1;
 
 /**
+ * Translation Config Schema
+ */
+export const translationSchema = {
+  outputMode: schema.enum(['plain', 'structured'] as const, { default: 'structured' }),
+};
+
+/**
  * Speech Recognition Config Schema
  */
 export const speechRecognitionSchema = {
@@ -80,6 +87,9 @@ export const aiConfigSchemaV1 = {
   modelName: schema.string({ default: '' }),
   apiKey: schema.string({ default: '' }),
 
+  // Translation config
+  translation: schema.object(translationSchema),
+
   // Speech recognition config
   speechRecognition: schema.object(speechRecognitionSchema),
 
@@ -104,6 +114,9 @@ export type AIConfigV1 = {
   endpoint: string;
   modelName: string;
   apiKey: string;
+  translation: {
+    outputMode: 'plain' | 'structured';
+  };
   speechRecognition: {
     provider: 'web-speech' | 'siliconflow' | 'local-whisper';
     apiKey?: string;

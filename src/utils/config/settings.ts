@@ -30,6 +30,10 @@ export interface VLMSettings {
   enableThinking: boolean; // Enable thinking mode (show model's reasoning process)
 }
 
+export interface TranslationSettings {
+  outputMode: 'plain' | 'structured'; // plain = plain text, structured = JSON structured output
+}
+
 export interface AISettings {
   // General AI service (fallback for all features)
   generalAI: GeneralAISettings;
@@ -38,6 +42,8 @@ export interface AISettings {
   endpoint: string;
   modelName: string;
   apiKey: string;
+  // Translation-specific settings
+  translation: TranslationSettings;
   // Speech recognition settings
   speechRecognition: SpeechRecognitionSettings;
   // Image OCR settings
@@ -60,6 +66,9 @@ export const DEFAULT_SETTINGS: AISettings = {
   endpoint: '',
   modelName: '',
   apiKey: '',
+  translation: {
+    outputMode: 'structured', // Default to structured output for better compatibility
+  },
   speechRecognition: {
     provider: 'web-speech',
     modelName: 'TeleAI/TeleSpeechASR', // Default model for AI Service
@@ -86,12 +95,43 @@ export const saveSettings = (settings: AISettings): void => {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 };
 
+/**
+ * Check if the model is Hunyuan-MT
+ */
+const isHunyuanMT = (modelName: string): boolean => {
+  const normalized = modelName.toLowerCase();
+  return normalized.includes('hunyuan-mt');
+};
+
+/**
+ * Determine the appropriate output mode based on model
+ */
+const determineOutputMode = (settings: Partial<AISettings>): 'plain' | 'structured' => {
+  // Check if user is using translation service or general AI
+  const useTranslationService = !!(settings.apiKey && settings.endpoint && settings.modelName);
+  const modelName = useTranslationService
+    ? (settings.modelName || '')
+    : (settings.generalAI?.modelName || '');
+
+  // If model is Hunyuan-MT, use plain text mode
+  if (isHunyuanMT(modelName)) {
+    return 'plain';
+  }
+
+  // Otherwise, use structured mode (default)
+  return 'structured';
+};
+
 export const loadSettings = (): AISettings | null => {
   const stored = localStorage.getItem(SETTINGS_KEY);
   if (!stored) return null;
 
   try {
     const parsed = JSON.parse(stored) as Partial<AISettings>;
+
+    // Determine output mode if not set
+    const outputMode = parsed.translation?.outputMode || determineOutputMode(parsed);
+
     // Merge with default settings to ensure all properties exist
     return {
       ...DEFAULT_SETTINGS,
@@ -99,6 +139,11 @@ export const loadSettings = (): AISettings | null => {
       generalAI: {
         ...DEFAULT_SETTINGS.generalAI,
         ...(parsed.generalAI || {}),
+      },
+      translation: {
+        ...DEFAULT_SETTINGS.translation,
+        ...(parsed.translation || {}),
+        outputMode, // Use determined output mode
       },
       speechRecognition: {
         ...DEFAULT_SETTINGS.speechRecognition,

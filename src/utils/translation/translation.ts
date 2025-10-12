@@ -178,8 +178,37 @@ export async function translateText(
       return filteredText;
     }
 
-    // For general AI models, use generateText with JSON parsing for more flexibility
+    // For general AI models, check output mode preference
     if (!useTranslationService) {
+      const outputMode = settings.translation?.outputMode || 'structured';
+
+      if (outputMode === 'plain') {
+        // Plain text output mode - simpler prompt, no JSON parsing
+        const result = await generateText({
+          model: client(modelName),
+          prompt: `You are a professional translator. Translate the following text from ${sourceLangName} (${sourceLang}) to ${targetLangName} (${targetLang}).
+
+Text to translate: "${text}"
+
+Instructions:
+1. Provide an accurate and natural translation
+2. Preserve the tone and style of the original text
+3. If the text contains idioms or cultural references, adapt them appropriately for the target language
+4. Maintain any formatting or special characters
+5. Return ONLY the translated text, without any additional explanation or formatting`,
+          abortSignal,
+        });
+
+        // Strip any thinking tags that some models might add
+        let cleanText = result.text.trim();
+        cleanText = cleanText.replace(/<think>[\s\S]*?<\/think>/gi, '');
+        cleanText = cleanText.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+        cleanText = cleanText.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+        cleanText = cleanText.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+        return cleanText.trim();
+      }
+
+      // Structured output mode - JSON response with parsing
       const result = await generateText({
         model: client(modelName),
         prompt: `You are a professional translator. Translate the following text from ${sourceLangName} (${sourceLang}) to ${targetLangName} (${targetLang}).

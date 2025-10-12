@@ -40,6 +40,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
     if (!loaded.vlm) {
       loaded.vlm = DEFAULT_SETTINGS.vlm;
     }
+    if (!loaded.translation) {
+      loaded.translation = DEFAULT_SETTINGS.translation;
+    }
     return loaded;
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -68,6 +71,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
       }
       if (!loaded.vlm) {
         loaded.vlm = DEFAULT_SETTINGS.vlm;
+      }
+      if (!loaded.translation) {
+        loaded.translation = DEFAULT_SETTINGS.translation;
       }
       setSettings(loaded);
       setActiveTab(initialTab);
@@ -338,6 +344,73 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, o
                     className="w-full px-3 py-2 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:border-indigo-500 focus:outline-none transition-colors"
                   />
                 </div>
+
+                {/* Output Mode Selection */}
+                {(() => {
+                  // Check if user is using general AI or a non-hunyuan-mt model
+                  const useTranslationService = !!(settings.apiKey && settings.endpoint && settings.modelName);
+                  const modelName = useTranslationService ? settings.modelName : settings.generalAI.modelName;
+                  const isHunyuanMT = modelName.toLowerCase().includes('hunyuan-mt');
+                  const canChooseOutputMode = !isHunyuanMT;
+
+                  return (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Output Mode
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            if (canChooseOutputMode) {
+                              setSettings({ ...settings, translation: { ...settings.translation, outputMode: 'plain' } });
+                            }
+                          }}
+                          disabled={!canChooseOutputMode}
+                          className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                            settings.translation?.outputMode === 'plain'
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
+                              : canChooseOutputMode
+                              ? 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                              : 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed'
+                          }`}
+                        >
+                          <div className="text-sm font-bold text-gray-800 dark:text-white">Plain Text</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Direct output</div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (canChooseOutputMode) {
+                              setSettings({ ...settings, translation: { ...settings.translation, outputMode: 'structured' } });
+                            }
+                          }}
+                          disabled={!canChooseOutputMode}
+                          className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                            settings.translation?.outputMode === 'structured'
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 cute-shadow'
+                              : canChooseOutputMode
+                              ? 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                              : 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed'
+                          }`}
+                        >
+                          <div className="text-sm font-bold text-gray-800 dark:text-white">Structured</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">JSON output</div>
+                        </button>
+                      </div>
+                      {isHunyuanMT && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                          Hunyuan-MT only supports plain text mode. Output mode is automatically set to plain.
+                        </p>
+                      )}
+                      {!isHunyuanMT && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <strong>Plain:</strong> Direct text output, more reliable for models with weak instruction following.
+                          <br />
+                          <strong>Structured:</strong> JSON output with better parsing, recommended for advanced models.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Info Box */}
                 <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl border border-indigo-200 dark:border-indigo-800">

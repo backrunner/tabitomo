@@ -16,6 +16,33 @@ interface WelcomeWizardProps {
 const SILICONFLOW_ENDPOINT = 'https://api.siliconflow.cn/v1';
 const HUNYUAN_MT_MODEL = 'tencent/Hunyuan-MT-7B';
 
+/**
+ * Check if the model is Hunyuan-MT
+ */
+const isHunyuanMT = (modelName: string): boolean => {
+  const normalized = modelName.toLowerCase();
+  return normalized.includes('hunyuan-mt');
+};
+
+/**
+ * Determine the appropriate output mode based on model
+ */
+const determineOutputMode = (settings: AISettings): 'plain' | 'structured' => {
+  // Check if user is using translation service or general AI
+  const useTranslationService = !!(settings.apiKey && settings.endpoint && settings.modelName);
+  const modelName = useTranslationService
+    ? settings.modelName
+    : settings.generalAI.modelName;
+
+  // If model is Hunyuan-MT, use plain text mode
+  if (isHunyuanMT(modelName)) {
+    return 'plain';
+  }
+
+  // Otherwise, use structured mode (default)
+  return 'structured';
+};
+
 type ConfigMode = 'general' | 'translation';
 type Mode = 'import-file' | 'import-qr';
 type Step = 'choice' | 'translation' | 'speech' | 'image';
@@ -71,14 +98,32 @@ export const WelcomeWizard: React.FC<WelcomeWizardProps> = ({ isOpen, onComplete
   };
 
   const handleImageComplete = () => {
-    onComplete(settings);
+    // Determine appropriate output mode before completing
+    const outputMode = determineOutputMode(settings);
+    const finalSettings = {
+      ...settings,
+      translation: {
+        ...settings.translation,
+        outputMode,
+      },
+    };
+    onComplete(finalSettings);
   };
 
   const handleSetLater = () => {
     if (currentStep === 'speech') {
       setCurrentStep('image');
     } else if (currentStep === 'image') {
-      onComplete(settings);
+      // Determine appropriate output mode before completing
+      const outputMode = determineOutputMode(settings);
+      const finalSettings = {
+        ...settings,
+        translation: {
+          ...settings.translation,
+          outputMode,
+        },
+      };
+      onComplete(finalSettings);
     }
   };
 
