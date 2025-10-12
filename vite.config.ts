@@ -54,7 +54,7 @@ export default defineConfig({
         name: 'tabitomo - AI-Powered Translation Companion',
         short_name: 'tabitomo',
         description: 'Your AI-powered travel companion for instant translation. Support text, voice, and image translation with OCR.',
-        theme_color: '#eef2ff',
+        theme_color: 'transparent',
         background_color: '#eef2ff',
         display: 'standalone',
         orientation: 'portrait',
