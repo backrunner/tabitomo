@@ -3,13 +3,27 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import UnoCSS from '@unocss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import fs from 'fs';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    UnoCSS(),
     react(),
+    UnoCSS(),
+    {
+      name: 'kuromoji-browser-loader',
+      transform(code, id) {
+        // Replace NodeDictionaryLoader with BrowserDictionaryLoader for kuromoji
+        if (id.includes('kuromoji') && id.includes('TokenizerBuilder')) {
+          return {
+            code: code.replace(
+              './loader/NodeDictionaryLoader',
+              './loader/BrowserDictionaryLoader'
+            ),
+            map: null
+          };
+        }
+      }
+    },
     {
       name: 'configure-response-headers',
       configureServer(server) {
@@ -94,26 +108,10 @@ export default defineConfig({
       // Provide browser-compatible path module for kuromoji
       'path': 'path-browserify',
     },
+    dedupe: ['react', 'react-dom'],
   },
   optimizeDeps: {
-    include: ['kuromoji', 'kuroshiro-analyzer-kuromoji'],
-    esbuildOptions: {
-      plugins: [
-        {
-          name: 'kuromoji-browser-loader-esbuild',
-          setup(build) {
-            build.onLoad({ filter: /TokenizerBuilder\.js$/ }, async (args) => {
-              let contents = fs.readFileSync(args.path, 'utf8');
-              contents = contents.replace(
-                './loader/NodeDictionaryLoader',
-                './loader/BrowserDictionaryLoader'
-              );
-              return { contents, loader: 'js' };
-            });
-          }
-        }
-      ]
-    }
+    include: ['kuromoji', 'kuroshiro-analyzer-kuromoji', 'react', 'react-dom'],
   },
   publicDir: 'public',
   build: {
@@ -122,58 +120,49 @@ export default defineConfig({
     copyPublicDir: true,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Core React libraries
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+        manualChunks: (id, { getModuleInfo }) => {
+          // Check if this module imports React (including transitive dependencies)
+          const hasReactImport = (id: string): boolean => {
+            if (!id.includes('node_modules/')) return false;
+            if (id.includes('node_modules/react/') ||
+                id.includes('node_modules/react-dom/') ||
+                id.includes('node_modules/scheduler/')) {
+              return true;
+            }
+
+            const info = getModuleInfo(id);
+            if (!info) return false;
+
+            // Check if any imports include react
+            return info.importedIds.some(importId =>
+              importId.includes('/react/') ||
+              importId.includes('/react-dom/') ||
+              importId.includes('/scheduler/')
+            );
+          };
+
+          // Bundle ALL React and React-dependent modules together
+          if (id.includes('node_modules/react') ||
+              id.includes('node_modules/scheduler') ||
+              id.includes('node_modules/@radix-ui/') ||
+              id.includes('lucide-react') ||
+              id.includes('react-router') ||
+              id.includes('@remix-run') ||
+              id.includes('react-dropzone') ||
+              id.includes('react-markdown') ||
+              id.includes('streamdown') ||
+              hasReactImport(id)) {
             return 'vendor-react';
           }
-          if (id.includes('node_modules/react-router-dom/')) {
-            return 'vendor-router';
-          }
 
-          // UI libraries
-          if (id.includes('lucide-react')) {
-            return 'vendor-icons';
-          }
-          if (id.includes('@radix-ui/')) {
-            return 'vendor-radix';
-          }
-          if (id.includes('react-dropzone')) {
-            return 'vendor-ui-misc';
-          }
-
-          // AI/ML libraries (heavy)
-          if (id.includes('node_modules/ai/') || id.includes('@ai-sdk/')) {
+          // AI/ML libraries (heavy, don't use React) - bundle together
+          if (id.includes('node_modules/ai/') ||
+              id.includes('@ai-sdk/') ||
+              id.includes('node_modules/openai/')) {
             return 'vendor-ai';
           }
-          if (id.includes('node_modules/openai/')) {
-            return 'vendor-openai';
-          }
 
-          // Japanese text processing (lazy loaded, but keep together when needed)
-          if (id.includes('kuroshiro') || id.includes('kuromoji')) {
-            return 'vendor-japanese';
-          }
-
-          // Markdown rendering (lazy loaded)
-          if (id.includes('marked') || id.includes('react-markdown')) {
-            return 'vendor-markdown';
-          }
-
-          // Image processing (lazy loaded)
-          if (id.includes('html5-qrcode') || id.includes('node_modules/qrcode/')) {
-            return 'vendor-qr';
-          }
-          if (id.includes('@jsquash/jpeg')) {
-            return 'vendor-image';
-          }
-
-          // Audio processing (lazy loaded)
-          if (id.includes('@remotion/whisper-web')) {
-            return 'vendor-whisper';
-          }
-
-          // Utilities
+          // Utilities used throughout the app
           if (id.includes('clsx') || id.includes('tailwind-merge')) {
             return 'vendor-css-utils';
           }
@@ -181,10 +170,12 @@ export default defineConfig({
             return 'vendor-zod';
           }
 
-          // Keep other node_modules together as vendor
-          if (id.includes('node_modules/')) {
-            return 'vendor-misc';
-          }
+          // Let Vite auto-bundle everything else, including:
+          // - whisper (dynamically imported)
+          // - QR libraries (dynamically imported)
+          // - Japanese libs (dynamically imported)
+          // - Image processing (dynamically imported)
+          // - Markdown (dynamically imported)
         }
       }
     }
