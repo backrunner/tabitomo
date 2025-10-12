@@ -25,3 +25,8 @@ dist-ssr
 .history
 .claude/settings.local.json
 dev-dist
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/

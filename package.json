@@ -11,7 +11,11 @@
     "build": "vite build",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "preview": "vite preview",
-    "deploy": "pnpm build && wrangler pages deploy dist"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:install": "playwright install --with-deps",
+    "deploy": "pnpm build && pnpm test:e2e && wrangler pages deploy dist"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.46",
@@ -41,6 +45,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.0",
     "@types/node": "^20.19.20",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.26",
@@ -57,6 +62,7 @@
     "eslint": "^8.57.1",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.23",
+    "playwright": "^1.56.0",
     "postcss": "latest",
     "tailwindcss": "3.4.17",
     "typescript": "^5.9.3",
