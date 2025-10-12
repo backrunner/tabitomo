@@ -84,6 +84,40 @@ const isHunyuanMT = (modelName: string): boolean => {
 };
 
 /**
+ * Check if text contains any brackets (English, Chinese, or other forms)
+ */
+const containsBrackets = (text: string): boolean => {
+  // Match English brackets: () [] {}
+  // Match Chinese brackets: （） 【】 ｛｝
+  // Match other bracket forms
+  const bracketRegex = /[()[\]{}（）【】｛｝]/;
+  return bracketRegex.test(text);
+};
+
+/**
+ * Filter trailing brackets from Hunyuan-MT output
+ * Only removes brackets at the end of the text if they were not in the source
+ */
+const filterTrailingBrackets = (text: string, sourceText: string): string => {
+  // If source text contains brackets, don't filter
+  if (containsBrackets(sourceText)) {
+    return text;
+  }
+
+  // If output doesn't contain brackets, no need to filter
+  if (!containsBrackets(text)) {
+    return text;
+  }
+
+  // Remove trailing brackets and their content
+  // Match brackets at the end with optional whitespace
+  // This regex captures trailing bracket content: (xxx), （xxx）, [xxx], 【xxx】, {xxx}, ｛xxx｝
+  const trailingBracketRegex = /\s*[(（[【{｛][^)）\]】}｝]*[)）\]】}｝]\s*$/;
+
+  return text.replace(trailingBracketRegex, '').trim();
+};
+
+/**
  * Translate text using AI with structured JSON output
  * @param text - The text to translate
  * @param sourceLang - Source language code
@@ -138,7 +172,10 @@ export async function translateText(
         abortSignal,
       });
 
-      return result.text;
+      // Filter trailing brackets from the translation result
+      const filteredText = filterTrailingBrackets(result.text, text);
+
+      return filteredText;
     }
 
     // For general AI models, use generateText with JSON parsing for more flexibility
